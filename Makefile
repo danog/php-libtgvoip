@@ -21,7 +21,7 @@
 include $(CLEAR_VARS)
 
 
-COMPILER_FLAGS		=	-Wall  -I/usr/include/opus -c -O3 -std=c++11 -fpic -DANDROID -finline-functions -ffast-math -Os -fno-strict-aliasing -DUSE_KISS_FFT -DFIXED_POINT -o
+COMPILER_FLAGS		=	-Wall -O3 -I/usr/include/opus -c -std=c++11 -fpic -DANDROID -finline-functions -ffast-math -Os -fno-strict-aliasing -DUSE_KISS_FFT -DFIXED_POINT -o
 #COMPILER_FLAGS      =   -Wall -c -O2 -std=c++11 -fpic -I/usr/include/opus -o
 LINKER_FLAGS		=	-shared
 LINKER_DEPENDENCIES	=	-lphpcpp -I/usr/include/opus

@@ -14,6 +14,7 @@ If not, see <http://www.gnu.org/licenses/>.
 #include <wchar.h>
 #include <map>
 #include <string>
+#include <vector>
 #include "libtgvoip/VoIPServerConfig.h"
 #include "libtgvoip/VoIPController.h"
 //#include "libtgvoip/os/android/AudioOutputOpenSLES.h"
@@ -21,8 +22,7 @@ If not, see <http://www.gnu.org/licenses/>.
 //#include "libtgvoip/os/android/AudioInputAndroid.h"
 //#include "libtgvoip/os/android/AudioOutputAndroid.h"
 
-
-
+using namespace tgvoip;
 
 class VoIP : public Php::Base {
 public:
@@ -49,7 +49,7 @@ public:
 
         impl_data_android_t* impl=(impl_data_android_t*) malloc(sizeof(impl_data_android_t));
         impl->javaObject=env->NewGlobalRef(thiz);
-        inst=new CVoIPController();
+        inst=new VoIPController();
         inst->implData=impl;
         inst->SetStateCallback(updateConnectionState);
         */
@@ -71,32 +71,32 @@ public:
     void setRemoteEndpoints(Php::Parameters &params) {
     
         size_t len=(size_t) params[0].size();
-        voip_endpoint_t* eps=(voip_endpoint_t *) malloc(sizeof(voip_endpoint_t)*len);
+        //voip_endpoint_t* eps=(voip_endpoint_t *) malloc(sizeof(voip_endpoint_t)*len);
+        std::vector<Endpoint> eps;
         uint i;
         
         for(i=0; i<len; i++) {
-        
-            eps[i].id=params[0][i]["id"];
-            eps[i].port= (int32_t) params[0][i]["port"];
-            const char* ipChars=params[0][i]["ip"];
-            inet_aton(ipChars, &eps[i].address);
+            std::string ip = params[0][i]["ip"];
             std::string ipv6 = params[0][i]["ipv6"];
-            
-            if(ipv6 != "") {
-                const char* ipv6Chars=params[0][i]["ipv6"];
-                inet_pton(AF_INET6, ipv6Chars, &eps[i].address6);
-            }
-            
             std::string peer_tag = params[0][i]["peer_tag"];
+
+
+            IPv4Address v4addr(ip);
+            IPv6Address v6addr("::0");
+            unsigned char pTag[16];
+
+            if(ipv6 != ""){
+                v6addr=IPv6Address(ipv6);
+            }
             if(peer_tag != "") {
-                memcpy(eps[i].peerTag, params[0][i]["peer_tag"], 16);
+                memcpy(pTag, params[0][i]["peer_tag"], 16);
             }
             
-            eps[i].type=EP_TYPE_UDP_RELAY;
+            eps.push_back(Endpoint(params[0][i]["id"], (int32_t)params[0][i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
+
         }
         
-        inst->SetRemoteEndpoints(eps, len, params[1]);
-        free(eps);
+        inst->SetRemoteEndpoints(eps, params[1]);
         
     }
 
@@ -153,12 +153,18 @@ public:
         cfg.enableAEC=params[3];
         cfg.enableNS=params[4];
         cfg.enableAGC=params[5];
-        if(params.size() == 7) {
+        if (params.size() == 7) {
             strncpy(cfg.logFilePath, params[6], sizeof(cfg.logFilePath));
             cfg.logFilePath[sizeof(cfg.logFilePath) - 1] = 0;
-            
         } else {
             memset(cfg.logFilePath, 0, sizeof(cfg.logFilePath));
+        }
+
+        if (params.size() == 8) {
+            strncpy(cfg.statsDumpFilePath, params[7], sizeof(cfg.statsDumpFilePath));
+            cfg.statsDumpFilePath[sizeof(cfg.statsDumpFilePath) - 1] = 0;
+        } else {
+            memset(cfg.statsDumpFilePath, 0, sizeof(cfg.statsDumpFilePath));
         }
         inst->SetConfig(&cfg);
     }
@@ -168,7 +174,7 @@ public:
     }
 
     Php::Value getVersion() {
-        return CVoIPController::GetVersion();
+        return VoIPController::GetVersion();
     }
 
     Php::Value getPreferredRelayID() {
@@ -191,7 +197,7 @@ public:
     }
 
     void setSharedConfig(Php::Parameters &params) {
-        CVoIPServerConfig::GetSharedInstance()->Update(params[0]);
+        ServerConfig::GetSharedInstance()->Update(params[0]);
     }
 
     Php::Value getDebugLog() {
@@ -201,7 +207,7 @@ public:
 private:
 
     Php::Value setStateMethod;
-    CVoIPController* inst;
+    VoIPController* inst;
     void updateConnectionState(int state) {
         if(setStateMethod) {
             setStateMethod(state);
@@ -253,6 +259,7 @@ extern "C" {
             Php::ByVal("enableAEC", Php::Type::Bool),
             Php::ByVal("enableAGC", Php::Type::Bool),
             Php::ByVal("logFilePath", Php::Type::String, false),
+            Php::ByVal("statsDumpFilePath", Php::Type::String, false),
         });
         voip.method<&VoIP::setSharedConfig> ("setSharedConfig", {
             Php::ByVal("config", Php::Type::Array)
