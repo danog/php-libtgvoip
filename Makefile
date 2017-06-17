@@ -10,51 +10,19 @@
 include $(CLEAR_VARS)
 
 
-COMPILER_FLAGS		=	-Wall -O3 -I/usr/include/opus -c -std=c++11 -fpic -DANDROID -finline-functions -ffast-math -Os -fno-strict-aliasing -DUSE_KISS_FFT -DFIXED_POINT -o
+COMPILER_FLAGS		=	-Wall -O3 -I/usr/include/opus -I/usr/include/openssl -Ilibtgvoip/webrtc_dsp -c -std=c++11 -fpic -DANDROID -finline-functions -ffast-math -Os -fno-strict-aliasing -DUSE_KISS_FFT -DFIXED_POINT -DTGVOIP_USE_CUSTOM_CRYPTO -o
 #COMPILER_FLAGS      =   -Wall -c -O2 -std=c++11 -fpic -I/usr/include/opus -o
 LINKER_FLAGS		=	-shared
 LINKER_DEPENDENCIES	=	-lphpcpp -I/usr/include/opus
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
     COMPILER_FLAGS += -mfloat-abi=softfp -mfpu=neon
-    LOCAL_CFLAGS += -mfloat-abi=softfp -mfpu=neon
 else
     ifeq ($(TARGET_ARCH_ABI),armeabi)
-	COMPILER_FLAGS += -mfloat-abi=softfp -mfpu=neon
-        LOCAL_CFLAGS += -mfloat-abi=softfp -mfpu=neon
-    else
-        ifeq ($(TARGET_ARCH_ABI),x86)
-
-        endif
+    	COMPILER_FLAGS += -mfloat-abi=softfp -mfpu=neon
     endif
 endif
 
-MY_DIR := libtgvoip
-
-LOCAL_C_INCLUDES := jni/opus/include jni/boringssl/include/
-
-LOCAL_SRC_FILES := \
-./libtgvoip/logging.cpp \
-./libtgvoip/VoIPController.cpp \
-./libtgvoip/BufferInputStream.cpp \
-./libtgvoip/BufferOutputStream.cpp \
-./libtgvoip/BlockingQueue.cpp \
-./libtgvoip/audio/AudioInput.cpp \
-./libtgvoip/os/android/AudioInputOpenSLES.cpp \
-./libtgvoip/MediaStreamItf.cpp \
-./libtgvoip/audio/AudioOutput.cpp \
-./libtgvoip/OpusEncoder.cpp \
-./libtgvoip/os/android/AudioOutputOpenSLES.cpp \
-./libtgvoip/JitterBuffer.cpp \
-./libtgvoip/OpusDecoder.cpp \
-./libtgvoip/BufferPool.cpp \
-./libtgvoip/os/android/OpenSLEngineWrapper.cpp \
-./libtgvoip/os/android/AudioInputAndroid.cpp \
-./libtgvoip/os/android/AudioOutputAndroid.cpp \
-./libtgvoip/EchoCanceller.cpp \
-./libtgvoip/CongestionControl.cpp \
-./libtgvoip/VoIPServerConfig.cpp \
-./libtgvoip/NetworkSocket.cpp
 
 
 include $(BUILD_STATIC_LIBRARY)

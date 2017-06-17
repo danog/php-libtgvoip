@@ -9,7 +9,6 @@ You should have received a copy of the GNU General Public License along with php
 If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include <phpcpp.h>
 #include <string.h>
 #include <wchar.h>
@@ -19,11 +18,28 @@ If not, see <http://www.gnu.org/licenses/>.
 #include "libtgvoip/VoIPServerConfig.h"
 #include "libtgvoip/VoIPController.h"
 #include "libtgvoip/NetworkSocket.h"
+#include "libtgvoip/logging.cpp"
+#include "libtgvoip/VoIPController.cpp"
+#include "libtgvoip/BufferInputStream.cpp"
+#include "libtgvoip/BufferOutputStream.cpp"
+#include "libtgvoip/BlockingQueue.cpp"
+#include "libtgvoip/audio/AudioInput.cpp"
+#include "libtgvoip/MediaStreamItf.cpp"
+#include "libtgvoip/audio/AudioOutput.cpp"
+#include "libtgvoip/OpusEncoder.cpp"
+#include "libtgvoip/JitterBuffer.cpp"
+#include "libtgvoip/OpusDecoder.cpp"
+#include "libtgvoip/BufferPool.cpp"
+#include "libtgvoip/EchoCanceller.cpp"
+#include "libtgvoip/CongestionControl.cpp"
+#include "libtgvoip/VoIPServerConfig.cpp"
+#include "libtgvoip/NetworkSocket.cpp"
 
-//#include "libtgvoip/os/android/AudioOutputOpenSLES.h"
-//#include "libtgvoip/os/android/AudioInputOpenSLES.h"
-//#include "libtgvoip/os/android/AudioInputAndroid.h"
-//#include "libtgvoip/os/android/AudioOutputAndroid.h"
+//#include "libtgvoip/os/android/AudioInputOpenSLES.cpp"
+//#include "libtgvoip/os/android/AudioOutputOpenSLES.cpp"
+//#include "libtgvoip/os/android/OpenSLEngineWrapper.cpp"
+//#include "libtgvoip/os/android/AudioInputAndroid.cpp"
+//#include "libtgvoip/os/android/AudioOutputAndroid.cpp"
 
 using namespace tgvoip;
 
