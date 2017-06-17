@@ -9,6 +9,7 @@ You should have received a copy of the GNU General Public License along with php
 If not, see <http://www.gnu.org/licenses/>.
 */
 
+
 #include <phpcpp.h>
 #include <string.h>
 #include <wchar.h>
@@ -17,6 +18,8 @@ If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include "libtgvoip/VoIPServerConfig.h"
 #include "libtgvoip/VoIPController.h"
+#include "libtgvoip/NetworkSocket.h"
+
 //#include "libtgvoip/os/android/AudioOutputOpenSLES.h"
 //#include "libtgvoip/os/android/AudioInputOpenSLES.h"
 //#include "libtgvoip/os/android/AudioInputAndroid.h"
@@ -27,7 +30,7 @@ using namespace tgvoip;
 class VoIP : public Php::Base {
 public:
 
-    void nativeInit(Php::Parameters &params) {
+    void __construct(Php::Parameters &params) {
         /*
         if(!CAudioInputAndroid::jniClass) {
             jclass cls=env->FindClass("org/telegram/messenger/voip/AudioRecordJNI");
@@ -49,10 +52,16 @@ public:
 
         impl_data_android_t* impl=(impl_data_android_t*) malloc(sizeof(impl_data_android_t));
         impl->javaObject=env->NewGlobalRef(thiz);
-        inst=new VoIPController();
-        inst->implData=impl;
-        inst->SetStateCallback(updateConnectionState);
         */
+        if (params.size() == 1) {
+            setStateMethod = params[0];
+        }
+        inst=new VoIPController();
+        inst->implData = static_cast<void*>(this);
+        inst->SetStateCallback([](tgvoip::VoIPController *controller, int state) {
+	    	static_cast<VoIP*>(controller->implData)->updateConnectionState(controller, state);
+    	});
+        
     }
 
     void start() {
@@ -81,8 +90,8 @@ public:
             std::string peer_tag = params[0][i]["peer_tag"];
 
 
-            IPv4Address v4addr(ip);
-            IPv6Address v6addr("::0");
+            tgvoip::IPv4Address v4addr(ip);
+            tgvoip::IPv6Address v6addr("::0");
             unsigned char pTag[16];
 
             if(ipv6 != ""){
@@ -204,15 +213,15 @@ public:
         return inst->GetDebugLog();
     }
     
-private:
-
-    Php::Value setStateMethod;
-    VoIPController* inst;
-    void updateConnectionState(int state) {
-        if(setStateMethod) {
+    void updateConnectionState(VoIPController* cntrlr, int state) {
+        if (setStateMethod) {
             setStateMethod(state);
         }
     }
+private:
+
+    VoIPController* inst;
+    Php::Value setStateMethod;
 
 };
 
@@ -234,6 +243,9 @@ extern "C" {
 
         // description of the class so that PHP knows which methods are accessible
         Php::Class<VoIP> voip("VoIP");
+        voip.method<&VoIP::__construct> ("__construct", {
+            Php::ByVal("setStateCallable", Php::Type::Callable, false),
+        });
         voip.method<&VoIP::setEncryptionKey> ("setEncryptionKey", {
             Php::ByVal("key", Php::Type::String),
             Php::ByVal("isOutgoing", Php::Type::Bool),

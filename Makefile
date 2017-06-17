@@ -7,17 +7,6 @@
 # You should have received a copy of the GNU General Public License along with php-libtgvoip.
 # If not, see <http://www.gnu.org/licenses/>.
 
-#
-#	Makefile template
-#
-#	This is an example Makefile that can be used by anyone who is building
-#	his or her own PHP extensions using the PHP-CPP library. 
-#
-#	In the top part of this file we have included variables that can be
-#	altered to fit your configuration, near the bottom the instructions and
-#	dependencies for the compiler are defined. The deeper you get into this
-#	file, the less likely it is that you will have to change anything in it.
-#
 include $(CLEAR_VARS)
 
 
@@ -45,32 +34,27 @@ MY_DIR := libtgvoip
 LOCAL_C_INCLUDES := jni/opus/include jni/boringssl/include/
 
 LOCAL_SRC_FILES := \
-$(MY_DIR)/external/speex_dsp/buffer.c \
-$(MY_DIR)/external/speex_dsp/fftwrap.c \
-$(MY_DIR)/external/speex_dsp/filterbank.c \
-$(MY_DIR)/external/speex_dsp/kiss_fft.c \
-$(MY_DIR)/external/speex_dsp/kiss_fftr.c \
-$(MY_DIR)/external/speex_dsp/mdf.c \
-$(MY_DIR)/external/speex_dsp/preprocess.c \
-$(MY_DIR)/external/speex_dsp/resample.c \
-$(MY_DIR)/external/speex_dsp/scal.c \
-$(MY_DIR)/external/speex_dsp/smallft.c \
-$(MY_DIR)/VoIPController.cpp \
-$(MY_DIR)/BufferInputStream.cpp \
-$(MY_DIR)/BufferOutputStream.cpp \
-$(MY_DIR)/BlockingQueue.cpp \
-$(MY_DIR)/audio/AudioInput.cpp \
-$(MY_DIR)/os/android/AudioInputOpenSLES.cpp \
-$(MY_DIR)/MediaStreamItf.cpp \
-$(MY_DIR)/audio/AudioOutput.cpp \
-$(MY_DIR)/OpusEncoder.cpp \
-$(MY_DIR)/os/android/AudioOutputOpenSLES.cpp \
-$(MY_DIR)/JitterBuffer.cpp \
-$(MY_DIR)/OpusDecoder.cpp \
-$(MY_DIR)/BufferPool.cpp \
-$(MY_DIR)/os/android/OpenSLEngineWrapper.cpp \
-$(MY_DIR)/os/android/AudioInputAndroid.cpp \
-$(MY_DIR)/EchoCanceller.cpp \
+./libtgvoip/logging.cpp \
+./libtgvoip/VoIPController.cpp \
+./libtgvoip/BufferInputStream.cpp \
+./libtgvoip/BufferOutputStream.cpp \
+./libtgvoip/BlockingQueue.cpp \
+./libtgvoip/audio/AudioInput.cpp \
+./libtgvoip/os/android/AudioInputOpenSLES.cpp \
+./libtgvoip/MediaStreamItf.cpp \
+./libtgvoip/audio/AudioOutput.cpp \
+./libtgvoip/OpusEncoder.cpp \
+./libtgvoip/os/android/AudioOutputOpenSLES.cpp \
+./libtgvoip/JitterBuffer.cpp \
+./libtgvoip/OpusDecoder.cpp \
+./libtgvoip/BufferPool.cpp \
+./libtgvoip/os/android/OpenSLEngineWrapper.cpp \
+./libtgvoip/os/android/AudioInputAndroid.cpp \
+./libtgvoip/os/android/AudioOutputAndroid.cpp \
+./libtgvoip/EchoCanceller.cpp \
+./libtgvoip/CongestionControl.cpp \
+./libtgvoip/VoIPServerConfig.cpp \
+./libtgvoip/NetworkSocket.cpp
 
 
 include $(BUILD_STATIC_LIBRARY)
@@ -93,7 +77,7 @@ NAME				=	libtgvoip
 #	one for each extension. Use this variable to specify this directory.
 #
 
-INI_DIR				=	/etc/php7ts/conf.d
+INI_DIR				=	$(shell php --ini | sed '/Scan for additional .ini files in: /!d;s/Scan for additional .ini files in: //')
 
 
 #
