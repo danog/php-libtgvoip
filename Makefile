@@ -10,7 +10,7 @@
 include $(CLEAR_VARS)
 
 
-COMPILER_FLAGS		=	-Wall -O3 -I/usr/include/opus -I/usr/include/openssl -Ilibtgvoip/webrtc_dsp -c -std=c++11 -fpic -DANDROID -finline-functions -ffast-math -Os -fno-strict-aliasing -DUSE_KISS_FFT -DFIXED_POINT -DTGVOIP_USE_CUSTOM_CRYPTO -o
+COMPILER_FLAGS		=	-Wall -O3 -I/usr/include/opus -I/usr/include/openssl -Ilibtgvoip/webrtc_dsp -c -std=c++11 -fpic -DANDROID -finline-functions -ffast-math -Os -fno-strict-aliasing -DUSE_KISS_FFT -DFIXED_POINT -DTGVOIP_USE_CUSTOM_CRYPTO -DPHP_LIBTGVOIP -o
 #COMPILER_FLAGS      =   -Wall -c -O2 -std=c++11 -fpic -I/usr/include/opus -o
 LINKER_FLAGS		=	-shared
 LINKER_DEPENDENCIES	=	-lphpcpp -I/usr/include/opus

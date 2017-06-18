@@ -34,6 +34,7 @@ If not, see <http://www.gnu.org/licenses/>.
 #include "libtgvoip/CongestionControl.cpp"
 #include "libtgvoip/VoIPServerConfig.cpp"
 #include "libtgvoip/NetworkSocket.cpp"
+#include "libtgvoip/os/posix/NetworkSocketPosix.cpp"
 
 //#include "libtgvoip/os/android/AudioInputOpenSLES.cpp"
 //#include "libtgvoip/os/android/AudioOutputOpenSLES.cpp"
@@ -69,9 +70,7 @@ public:
         impl_data_android_t* impl=(impl_data_android_t*) malloc(sizeof(impl_data_android_t));
         impl->javaObject=env->NewGlobalRef(thiz);
         */
-        if (params.size() == 1) {
-            setStateMethod = params[0];
-        }
+        setStateMethod = params[0];
         inst=new VoIPController();
         inst->implData = static_cast<void*>(this);
         inst->SetStateCallback([](tgvoip::VoIPController *controller, int state) {
@@ -230,9 +229,7 @@ public:
     }
     
     void updateConnectionState(VoIPController* cntrlr, int state) {
-        if (setStateMethod) {
-            setStateMethod(state);
-        }
+        setStateMethod(state);
     }
 private:
 
@@ -260,7 +257,7 @@ extern "C" {
         // description of the class so that PHP knows which methods are accessible
         Php::Class<VoIP> voip("VoIP");
         voip.method<&VoIP::__construct> ("__construct", {
-            Php::ByVal("setStateCallable", Php::Type::Callable, false),
+            Php::ByVal("setStateCallable", Php::Type::Callable)
         });
         voip.method<&VoIP::setEncryptionKey> ("setEncryptionKey", {
             Php::ByVal("key", Php::Type::String),

@@ -10,6 +10,6 @@ You should have received a copy of the GNU General Public License along with php
 If not, see <http://www.gnu.org/licenses/>.
 */
 
-$VoIP = new \danog\MadelineProto\VoIP();
+$VoIP = new \danog\MadelineProto\VoIP(function ($state) { var_dump($state); });
 
 var_dump($VoIP);
