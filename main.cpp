@@ -23,9 +23,7 @@ If not, see <http://www.gnu.org/licenses/>.
 #include "libtgvoip/BufferInputStream.cpp"
 #include "libtgvoip/BufferOutputStream.cpp"
 #include "libtgvoip/BlockingQueue.cpp"
-#include "libtgvoip/audio/AudioInput.cpp"
 #include "libtgvoip/MediaStreamItf.cpp"
-#include "libtgvoip/audio/AudioOutput.cpp"
 #include "libtgvoip/OpusEncoder.cpp"
 #include "libtgvoip/JitterBuffer.cpp"
 #include "libtgvoip/OpusDecoder.cpp"
@@ -36,6 +34,8 @@ If not, see <http://www.gnu.org/licenses/>.
 #include "libtgvoip/NetworkSocket.cpp"
 #include "libtgvoip/os/posix/NetworkSocketPosix.cpp"
 
+#include "libtgvoip/audio/AudioInput.cpp"
+#include "libtgvoip/audio/AudioOutput.cpp"
 //#include "libtgvoip/os/android/AudioInputOpenSLES.cpp"
 //#include "libtgvoip/os/android/AudioOutputOpenSLES.cpp"
 //#include "libtgvoip/os/android/OpenSLEngineWrapper.cpp"
@@ -48,30 +48,8 @@ class VoIP : public Php::Base {
 public:
 
     void __construct(Php::Parameters &params) {
-        /*
-        if(!CAudioInputAndroid::jniClass) {
-            jclass cls=env->FindClass("org/telegram/messenger/voip/AudioRecordJNI");
-            CAudioInputAndroid::jniClass=(jclass) env->NewGlobalRef(cls);
-            CAudioInputAndroid::initMethod=env->GetMethodID(cls, "init", "(IIII)V");
-            CAudioInputAndroid::releaseMethod=env->GetMethodID(cls, "release", "()V");
-            CAudioInputAndroid::startMethod=env->GetMethodID(cls, "start", "()Z");
-            CAudioInputAndroid::stopMethod=env->GetMethodID(cls, "stop", "()V");
-
-            cls=env->FindClass("org/telegram/messenger/voip/AudioTrackJNI");
-            CAudioOutputAndroid::jniClass=(jclass) env->NewGlobalRef(cls);
-            CAudioOutputAndroid::initMethod=env->GetMethodID(cls, "init", "(IIII)V");
-            CAudioOutputAndroid::releaseMethod=env->GetMethodID(cls, "release", "()V");
-            CAudioOutputAndroid::startMethod=env->GetMethodID(cls, "start", "()V");
-            CAudioOutputAndroid::stopMethod=env->GetMethodID(cls, "stop", "()V");
-        }
-
-        setStateMethod=env->GetMethodID(env->GetObjectClass(thiz), "handleStateChange", "(I)V");
-
-        impl_data_android_t* impl=(impl_data_android_t*) malloc(sizeof(impl_data_android_t));
-        impl->javaObject=env->NewGlobalRef(thiz);
-        */
         setStateMethod = params[0];
-        inst=new VoIPController();
+        inst=new VoIPController(params[1], params[2]);
         inst->implData = static_cast<void*>(this);
         inst->SetStateCallback([](tgvoip::VoIPController *controller, int state) {
 	    	static_cast<VoIP*>(controller->implData)->updateConnectionState(controller, state);
@@ -135,24 +113,16 @@ public:
         delete inst;
     }
     
-    /*
-        void AudioRecordJNI_nativeCallback(jobject buffer) {
-            if(!audioRecordInstanceFld)
-                audioRecordInstanceFld=env->GetFieldID(env->GetObjectClass(thiz), "nativeInst", "J");
+    
+    void writeFrames(Php::Parameters &params) {
+        AudioInputPHP* in=(AudioInputPHP*)inst;
+        in->writeFrames((unigned char *)params[0], params[0].length());
+    }
 
-            =env->GetLongField(thiz, audioRecordInstanceFld);
-            CAudioInputAndroid* in=(CAudioInputAndroid*)inst;
-            in->HandleCallback(env, buffer);
-        }
-
-        void AudioTrackJNI_nativeCallback(jbyteArray buffer) {
-            if(!audioTrackInstanceFld)
-                audioTrackInstanceFld=env->GetFieldID(env->GetObjectClass(thiz), "nativeInst", "J");
-
-            =env->GetLongField(thiz, audioTrackInstanceFld);
-            CAudioOutputAndroid* in=(CAudioOutputAndroid*)inst;
-            in->HandleCallback(env, buffer);
-        }
+    Php::Value readFrames() {
+        AudioOutputPHP* out=(AudioOutputPHP*)inst;
+        return out->readFrames();
+    }
     */
     
     Php::Value getDebugString() {
@@ -302,6 +272,11 @@ extern "C" {
         voip.method<&VoIP::release> ("release");
         voip.method<&VoIP::start> ("start");
         voip.method<&VoIP::connect> ("connect");
+
+        voip.method<&VoIP::readFrames> ("readFrames");
+        voip.method<&VoIP::writeFrames> ("writeFrames", {
+            Php::ByVal("frames", Php::Type::String)
+        });
         
         Php::Namespace danog("danog");
         Php::Namespace MadelineProto("MadelineProto");
