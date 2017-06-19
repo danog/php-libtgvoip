@@ -15,23 +15,18 @@ namespace tgvoip{ namespace audio{
 class AudioInputPHP : public AudioInput{
 
 public:
-	AudioInputPHP();
+	AudioInputPHP(Php::Value callbacks);
 	virtual ~AudioInputPHP();
+	Php::Value configureMethod;
+	Php::Value startMethod;
+	Php::Value stopMethod;
+
 	virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
 	virtual void Start();
 	virtual void Stop();
-	void HandleCallback(PHP::Parameters &params);
-	static jmethodID initMethod;
-	static jmethodID releaseMethod;
-	static jmethodID startMethod;
-	static jmethodID stopMethod;
-	static jclass jniClass;
-
+	virtual void writeFrames(Php::Parameters &params);
 private:
-	jobject javaObject;
 	bool running;
-	tgvoip_mutex_t mutex;
-
 };
 }}
 
