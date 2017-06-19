@@ -116,14 +116,14 @@ public:
     
     void writeFrames(Php::Parameters &params) {
         AudioInputPHP* in=(AudioInputPHP*)inst;
-        in->writeFrames((unigned char *)params[0], params[0].length());
+        in->writeFrames(params);
     }
 
     Php::Value readFrames() {
         AudioOutputPHP* out=(AudioOutputPHP*)inst;
         return out->readFrames();
     }
-    */
+    
     
     Php::Value getDebugString() {
         char buf[10240];

@@ -42,4 +42,5 @@ void AudioInputPHP::writeFrames(Php::Parameters &params){
 	unsigned char * buf;
 	memcpy(buf, params[0], 960*2);
 	InvokeCallback(buf, 960*2);
+	delete buf;
 }
