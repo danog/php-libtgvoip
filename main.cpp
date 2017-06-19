@@ -34,8 +34,8 @@ If not, see <http://www.gnu.org/licenses/>.
 #include "libtgvoip/NetworkSocket.cpp"
 #include "libtgvoip/os/posix/NetworkSocketPosix.cpp"
 
-#include "libtgvoip/audio/AudioInput.cpp"
-#include "libtgvoip/audio/AudioOutput.cpp"
+#include "AudioInputPHP.h"
+#include "AudioOutputPHP.h"
 //#include "libtgvoip/os/android/AudioInputOpenSLES.cpp"
 //#include "libtgvoip/os/android/AudioOutputOpenSLES.cpp"
 //#include "libtgvoip/os/android/OpenSLEngineWrapper.cpp"
@@ -115,12 +115,12 @@ public:
     
     
     void writeFrames(Php::Parameters &params) {
-        AudioInputPHP* in=(AudioInputPHP*)inst;
+        AudioInputPHP* in=(AudioInputPHP*)(intptr_t)inst;
         in->writeFrames(params);
     }
 
     Php::Value readFrames() {
-        AudioOutputPHP* out=(AudioOutputPHP*)inst;
+        AudioOutputPHP* out=(AudioOutputPHP*)(intptr_t)inst;
         return out->readFrames();
     }
     

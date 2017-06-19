@@ -133,17 +133,18 @@ OBJECTS				=	$(SOURCES:%.cpp=%.o)
 
 all:					${OBJECTS} ${EXTENSION}
 
-${EXTENSION}:			${OBJECTS}
-						${LINKER} ${LINKER_FLAGS} -o $@ ${OBJECTS} ${LINKER_DEPENDENCIES}
+${EXTENSION}:				${OBJECTS}
+					${LINKER} ${LINKER_FLAGS} -o $@ ${OBJECTS} ${LINKER_DEPENDENCIES}
 
 ${OBJECTS}:
-						${COMPILER} ${COMPILER_FLAGS} $@ ${@:%.o=%.cpp}
+					${COMPILER} ${COMPILER_FLAGS} $@ ${@:%.o=%.cpp}
 
-install:		
-						${CP} ${EXTENSION} ${EXTENSION_DIR}
-						${CP} ${INI} ${INI_DIR}
-				
+install:
+					${CP} ${EXTENSION} ${EXTENSION_DIR}
+					${CP} ${INI} ${INI_DIR}
+
+
 clean:
-						${RM} ${EXTENSION} ${OBJECTS}
+					${RM} ${EXTENSION} ${OBJECTS}
 
 
