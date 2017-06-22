@@ -9,6 +9,7 @@ You should have received a copy of the GNU General Public License along with php
 If not, see <http://www.gnu.org/licenses/>.
 */
 
+
 #include <phpcpp.h>
 #include <string.h>
 #include <wchar.h>
@@ -34,15 +35,14 @@ If not, see <http://www.gnu.org/licenses/>.
 #include "libtgvoip/NetworkSocket.cpp"
 #include "libtgvoip/os/posix/NetworkSocketPosix.cpp"
 
-#include "AudioInputPHP.h"
-#include "AudioOutputPHP.h"
-//#include "libtgvoip/os/android/AudioInputOpenSLES.cpp"
-//#include "libtgvoip/os/android/AudioOutputOpenSLES.cpp"
-//#include "libtgvoip/os/android/OpenSLEngineWrapper.cpp"
-//#include "libtgvoip/os/android/AudioInputAndroid.cpp"
-//#include "libtgvoip/os/android/AudioOutputAndroid.cpp"
+#include "audio/AudioInputPHP.cpp"
+#include "audio/AudioOutputPHP.cpp"
+
+#include "libtgvoip/audio/AudioInput.cpp"
+#include "libtgvoip/audio/AudioOutput.cpp"
 
 using namespace tgvoip;
+using namespace tgvoip::audio;
 
 class VoIP : public Php::Base {
 public:

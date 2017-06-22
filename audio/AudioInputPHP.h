@@ -8,8 +8,8 @@
 #define LIBTGVOIP_AUDIOINPUTPHP_H
 
 #include "phpcpp.h"
-#include "libtgvoip/audio/AudioInput.h"
-#include "libtgvoip/threading.h"
+#include "../libtgvoip/audio/AudioInput.h"
+#include "../libtgvoip/threading.h"
 
 namespace tgvoip{ namespace audio{
 class AudioInputPHP : public AudioInput{

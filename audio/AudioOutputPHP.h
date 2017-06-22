@@ -7,7 +7,7 @@
 #ifndef LIBTGVOIP_AUDIOOUTPUTPHP_H
 #define LIBTGVOIP_AUDIOOUTPUTPHP_H
 
-#include "libtgvoip/audio/AudioOutput.h"
+#include "../libtgvoip/audio/AudioOutput.h"
 #include "phpcpp.h"
 
 namespace tgvoip{ namespace audio{
