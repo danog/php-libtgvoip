@@ -281,6 +281,29 @@ extern "C" {
             Php::ByVal("frames", Php::Type::String)
         });
         
+        voip.constant("STATE_WAIT_INIT", 1);
+        voip.constant("STATE_WAIT_INIT_ACK", 2);
+        voip.constant("STATE_ESTABLISHED", 3);
+        voip.constant("STATE_FAILED", 4);
+
+        voip.constant("TGVOIP_ERROR_UNKNOWN", 0);
+        voip.constant("TGVOIP_ERROR_INCOMPATIBLE", 1);
+        voip.constant("TGVOIP_ERROR_TIMEOUT", 2);
+        voip.constant("TGVOIP_ERROR_AUDIO_IO", 3);
+
+        voip.constant("NET_TYPE_UNKNOWN", 0);
+        voip.constant("NET_TYPE_GPRS", 1);
+        voip.constant("NET_TYPE_EDGE", 2);
+        voip.constant("NET_TYPE_3G", 3);
+        voip.constant("NET_TYPE_HSPA", 4);
+        voip.constant("NET_TYPE_LTE", 5);
+        voip.constant("NET_TYPE_WIFI", 6);
+        voip.constant("NET_TYPE_ETHERNET", 7);
+        voip.constant("NET_TYPE_OTHER_HIGH_SPEED", 8);
+        voip.constant("NET_TYPE_OTHER_LOW_SPEED", 9);
+        voip.constant("NET_TYPE_DIALUP", 10);
+        voip.constant("NET_TYPE_OTHER_MOBILE", 11);
+
         Php::Namespace danog("danog");
         Php::Namespace MadelineProto("MadelineProto");
 
