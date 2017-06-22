@@ -22,14 +22,14 @@ public:
 	virtual void Stop();
 	virtual bool IsPlaying() override;
 	virtual float GetLevel() override;
-	virtual Php::Value readFrames();
+	Php::Value readFrames();
 
+private:
 	Php::Value configureMethod;
 	Php::Value startMethod;
 	Php::Value stopMethod;
 	Php::Value isPlayingMethod;
 	Php::Value getLevelMethod;
-private:
 	bool running;
 };
 }}

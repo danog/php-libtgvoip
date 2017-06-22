@@ -35,11 +35,12 @@ If not, see <http://www.gnu.org/licenses/>.
 #include "libtgvoip/NetworkSocket.cpp"
 #include "libtgvoip/os/posix/NetworkSocketPosix.cpp"
 
-//#include "audio/AudioInputPHP.cpp"
-//#include "audio/AudioOutputPHP.cpp"
-
 #include "libtgvoip/audio/AudioInput.cpp"
 #include "libtgvoip/audio/AudioOutput.cpp"
+
+#include "audio/AudioInputPHP.h"
+#include "audio/AudioOutputPHP.h"
+
 
 using namespace tgvoip;
 using namespace tgvoip::audio;

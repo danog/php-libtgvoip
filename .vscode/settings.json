@@ -2,6 +2,7 @@
     "files.associations": {
         "array": "cpp",
         "initializer_list": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "system_error": "cpp"
     }
 }
