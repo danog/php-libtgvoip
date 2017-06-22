@@ -45,4 +45,3 @@ void AudioInputPHP::writeFrames(Php::Parameters &params){
 	InvokeCallback(buf, 960*2);
 	delete buf;
 }
-

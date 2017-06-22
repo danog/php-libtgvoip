@@ -3,6 +3,7 @@
         "array": "cpp",
         "initializer_list": "cpp",
         "utility": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "type_traits": "cpp"
     }
 }

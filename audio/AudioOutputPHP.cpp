@@ -50,7 +50,6 @@ Php::Value AudioOutputPHP::readFrames() {
 	InvokeCallback(buf, 960*2);
 	return buf;
 }
-
 /*
 AudioOutputPHP::~AudioOutputPHP(){
 	JNIEnv* env=NULL;
