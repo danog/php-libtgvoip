@@ -228,7 +228,9 @@ extern "C" {
         // description of the class so that PHP knows which methods are accessible
         Php::Class<VoIP> voip("VoIP");
         voip.method<&VoIP::__construct> ("__construct", {
-            Php::ByVal("setStateCallable", Php::Type::Callable)
+            Php::ByVal("setStateCallable", Php::Type::Callable),
+            Php::ByVal("inputCallables", Php::Type::Array),
+            Php::ByVal("outputCallables", Php::Type::Array),
         });
         voip.method<&VoIP::setEncryptionKey> ("setEncryptionKey", {
             Php::ByVal("key", Php::Type::String),
