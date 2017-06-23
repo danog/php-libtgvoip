@@ -30,6 +30,7 @@ private:
 	Php::Value stopMethod;
 	Php::Value isPlayingMethod;
 	Php::Value getLevelMethod;
+	void* call;
 	bool running;
 };
 }}

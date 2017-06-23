@@ -17,23 +17,24 @@ AudioOutputPHP::AudioOutputPHP(Php::Value callbacks){
 	stopMethod = callbacks["stop"];
 	configureMethod = callbacks["configure"];
 	getLevelMethod = callbacks["get_level"];
+	call = callbacks["call"];
 }
 
 void AudioOutputPHP::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels){
-	configureMethod((int32_t)sampleRate, (int32_t)bitsPerSample, (int32_t)channels);
+	configureMethod(static_cast<VoIP*> call, (int32_t)sampleRate, (int32_t)bitsPerSample, (int32_t)channels);
 }
 
 void AudioOutputPHP::Start(){
 	if(running)
 		return;
 	running = true;
-	startMethod();
+	startMethod(static_cast<VoIP*> call);
 }
 
 void AudioOutputPHP::Stop(){
 	if(!running)
 		return;
-	stopMethod();
+	stopMethod(static_cast<VoIP*> call);
 	running = false;
 }
 
@@ -42,7 +43,7 @@ bool AudioOutputPHP::IsPlaying(){
 }
 
 float AudioOutputPHP::GetLevel(){
-	return (double)getLevelMethod();
+	return (double)getLevelMethod(static_cast<VoIP*> call);
 }
 
 Php::Value AudioOutputPHP::readFrames() {
@@ -50,22 +51,3 @@ Php::Value AudioOutputPHP::readFrames() {
 	InvokeCallback(buf, 960*2);
 	return buf;
 }
-/*
-AudioOutputPHP::~AudioOutputPHP(){
-	JNIEnv* env=NULL;
-	bool didAttach=false;
-	sharedJVM->GetEnv((void**) &env, JNI_VERSION_1_6);
-	if(!env){
-		sharedJVM->AttachCurrentThread(&env, NULL);
-		didAttach=true;
-	}
-
-	env->CallVoidMethod(javaObject, releaseMethod);
-	env->DeleteGlobalRef(javaObject);
-	javaObject=NULL;
-
-	if(didAttach){
-		sharedJVM->DetachCurrentThread();
-	}
-}
-*/

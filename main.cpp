@@ -50,6 +50,10 @@ public:
 
     void __construct(Php::Parameters &params) {
         setStateMethod = params[0];
+        madeline = params[3];
+        current_call = params[4];
+        params[1]["call"] = static_cast<void*>(this);
+        params[2]["call"] = static_cast<void*>(this);
         inst=new VoIPController(params[1], params[2]);
         inst->implData = static_cast<void*>(this);
         inst->SetStateCallback([](tgvoip::VoIPController *controller, int state) {
@@ -200,12 +204,14 @@ public:
     }
     
     void updateConnectionState(VoIPController* cntrlr, int state) {
-        setStateMethod(state);
+        setStateMethod(this, state);
     }
 private:
 
     VoIPController* inst;
     Php::Value setStateMethod;
+    Php::Value madeline;
+    Php::Value current_call;
 
 };
 
@@ -231,6 +237,8 @@ extern "C" {
             Php::ByVal("setStateCallable", Php::Type::Callable),
             Php::ByVal("inputCallables", Php::Type::Array),
             Php::ByVal("outputCallables", Php::Type::Array),
+            Php::ByRef("madelineProto", Php::Type::Object),
+            Php::ByRef("currentCall", Php::Type::Array),
         });
         voip.method<&VoIP::setEncryptionKey> ("setEncryptionKey", {
             Php::ByVal("key", Php::Type::String),
@@ -242,9 +250,11 @@ extern "C" {
         voip.method<&VoIP::setMicMute> ("setMicMute", {
             Php::ByVal("type", Php::Type::Bool),
         });
+        /*
         voip.method<&VoIP::setNativeBufferSize> ("setNativeBufferSize", {
             Php::ByVal("type", Php::Type::Numeric),
         });
+        */
         voip.method<&VoIP::debugCtl> ("debugCtl", {
             Php::ByVal("request", Php::Type::Numeric),
             Php::ByVal("param", Php::Type::Numeric),
@@ -252,9 +262,9 @@ extern "C" {
         voip.method<&VoIP::setConfig> ("setConfig", { // jdouble recvTimeout, jdouble initTimeout, jint dataSavingMode, jboolean enableAEC, jboolean enableNS, jboolean enableAGC, jstring logFilePath
             Php::ByVal("recvTimeout", Php::Type::Float),
             Php::ByVal("initTimeout", Php::Type::Float),
-            Php::ByVal("dataSavingMode", Php::Type::Numeric),
+            Php::ByVal("dataSavingMode", Php::Type::Bool),
             Php::ByVal("enableAEC", Php::Type::Bool),
-            Php::ByVal("enableAEC", Php::Type::Bool),
+            Php::ByVal("enableNS", Php::Type::Bool),
             Php::ByVal("enableAGC", Php::Type::Bool),
             Php::ByVal("logFilePath", Php::Type::String, false),
             Php::ByVal("statsDumpFilePath", Php::Type::String, false),
@@ -281,6 +291,7 @@ extern "C" {
             Php::ByVal("frames", Php::Type::String)
         });
         
+        voip.constant("STATE_READY_TO_INIT", 0);
         voip.constant("STATE_WAIT_INIT", 1);
         voip.constant("STATE_WAIT_INIT_ACK", 2);
         voip.constant("STATE_ESTABLISHED", 3);
