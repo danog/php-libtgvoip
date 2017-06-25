@@ -70,8 +70,9 @@ public:
         inst->Connect();
     }
     void setEncryptionKey(Php::Parameters &params) {
-        char *key = strdup(params[0]);
-        inst->SetEncryptionKey(key, params[1]);
+        char key[256];
+        memcpy(key, (const char *) params[0], 256);
+        inst->SetEncryptionKey(key, (bool) params[1]);
         free(key);
     }
 
