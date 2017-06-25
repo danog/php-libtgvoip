@@ -70,8 +70,8 @@ public:
         inst->Connect();
     }
     void setEncryptionKey(Php::Parameters &params) {
-        char key[256];
-        memcpy(key, (const char *) params[0], 256);
+        
+        char* key = strdup(params[0]);
         inst->SetEncryptionKey(key, (bool) params[1]);
         free(key);
     }
@@ -96,26 +96,20 @@ public:
             if(ipv6 != ""){
                 v6addr=IPv6Address(ipv6);
             }
+
             if(peer_tag != "") {
-                memcpy(pTag, params[0][i]["peer_tag"], 16);
+                memcpy(pTag, peer_tag.c_str(), 17);
             }
             
             eps.push_back(Endpoint(params[0][i]["id"], (int32_t)params[0][i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
 
         }
-        
         inst->SetRemoteEndpoints(eps, params[1]);
         
     }
 
-    void setNativeBufferSize(Php::Parameters &params) {
-        //CAudioOutputOpenSLES::nativeBufferSize=params[0];
-        //CAudioInputOpenSLES::nativeBufferSize=params[0];
-    }
 
     void release() {
-        //env->DeleteGlobalRef(CAudioInputAndroid::jniClass);
-
         delete inst;
     }
     
@@ -251,11 +245,6 @@ extern "C" {
         voip.method<&VoIP::setMicMute> ("setMicMute", {
             Php::ByVal("type", Php::Type::Bool),
         });
-        /*
-        voip.method<&VoIP::setNativeBufferSize> ("setNativeBufferSize", {
-            Php::ByVal("type", Php::Type::Numeric),
-        });
-        */
         voip.method<&VoIP::debugCtl> ("debugCtl", {
             Php::ByVal("request", Php::Type::Numeric),
             Php::ByVal("param", Php::Type::Numeric),
