@@ -98,7 +98,7 @@ public:
             }
 
             if(peer_tag != "") {
-                memcpy(pTag, peer_tag.c_str(), 17);
+                memcpy(pTag, peer_tag.c_str(), 16);
             }
             
             eps.push_back(Endpoint(params[0][i]["id"], (int32_t)params[0][i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
