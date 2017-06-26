@@ -71,7 +71,8 @@ public:
     }
     void setEncryptionKey(Php::Parameters &params) {
         
-        char* key = strdup(params[0]);
+        char* key = (char*)malloc(256);
+        memcpy(key, params[0], 256);
         inst->SetEncryptionKey(key, (bool) params[1]);
         free(key);
     }
