@@ -35,11 +35,12 @@ If not, see <http://www.gnu.org/licenses/>.
 #include "libtgvoip/NetworkSocket.cpp"
 #include "libtgvoip/os/posix/NetworkSocketPosix.cpp"
 
+#include "audio/AudioInputPHP.h"
+#include "audio/AudioOutputPHP.h"
+
 #include "libtgvoip/audio/AudioInput.cpp"
 #include "libtgvoip/audio/AudioOutput.cpp"
 
-#include "audio/AudioInputPHP.h"
-#include "audio/AudioOutputPHP.h"
 
 
 using namespace tgvoip;
@@ -52,8 +53,6 @@ public:
         setStateMethod = params[0];
         madeline = params[3];
         current_call = params[4];
-        params[1]["call"] = static_cast<void*>(this);
-        params[2]["call"] = static_cast<void*>(this);
         inst=new VoIPController(params[1], params[2]);
         inst->implData = static_cast<void*>(this);
         inst->SetStateCallback([](tgvoip::VoIPController *controller, int state) {
@@ -282,7 +281,6 @@ extern "C" {
             Php::ByVal("frames", Php::Type::String)
         });
         
-        voip.constant("STATE_READY_TO_INIT", 0);
         voip.constant("STATE_WAIT_INIT", 1);
         voip.constant("STATE_WAIT_INIT_ACK", 2);
         voip.constant("STATE_ESTABLISHED", 3);

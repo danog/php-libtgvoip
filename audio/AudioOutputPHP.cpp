@@ -17,24 +17,23 @@ AudioOutputPHP::AudioOutputPHP(Php::Value callbacks){
 	stopMethod = callbacks["stop"];
 	configureMethod = callbacks["configure"];
 	getLevelMethod = callbacks["get_level"];
-	call = callbacks["call"];
 }
 
 void AudioOutputPHP::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels){
-	configureMethod(static_cast<VoIP*> call, (int32_t)sampleRate, (int32_t)bitsPerSample, (int32_t)channels);
+	configureMethod((int32_t)sampleRate, (int32_t)bitsPerSample, (int32_t)channels);
 }
 
 void AudioOutputPHP::Start(){
 	if(running)
 		return;
+	startMethod();
 	running = true;
-	startMethod(static_cast<VoIP*> call);
 }
 
 void AudioOutputPHP::Stop(){
 	if(!running)
 		return;
-	stopMethod(static_cast<VoIP*> call);
+	stopMethod();
 	running = false;
 }
 
@@ -43,7 +42,7 @@ bool AudioOutputPHP::IsPlaying(){
 }
 
 float AudioOutputPHP::GetLevel(){
-	return (double)getLevelMethod(static_cast<VoIP*> call);
+	return (double)getLevelMethod();
 }
 
 Php::Value AudioOutputPHP::readFrames() {

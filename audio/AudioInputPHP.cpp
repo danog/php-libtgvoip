@@ -17,7 +17,6 @@ AudioInputPHP::AudioInputPHP(Php::Value callbacks){
 	startMethod = callbacks["start"];
 	stopMethod = callbacks["stop"];
 	configureMethod = callbacks["configure"];
-	call = callbacks["call"];
 }
 
 
@@ -25,18 +24,20 @@ AudioInputPHP::~AudioInputPHP(){
 
 }
 void AudioInputPHP::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
-	configureMethod(static_cast<VoIP*> call, (int32_t)sampleRate, (int32_t)bitsPerSample, (int32_t)channels);
+	configureMethod((int32_t)sampleRate, (int32_t)bitsPerSample, (int32_t)channels);
 }
 
 void AudioInputPHP::Start(){
 	if(running)
 		return;
-	startMethod(static_cast<VoIP*> call);
+	startMethod();
+	running = true;
 
 }
 
 void AudioInputPHP::Stop(){
-	stopMethod(static_cast<VoIP*> call);
+	stopMethod();
+	running = false;
 }
 void AudioInputPHP::writeFrames(Php::Parameters &params){
 	if(!running)

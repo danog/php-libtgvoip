@@ -26,7 +26,6 @@ private:
 	Php::Value configureMethod;
 	Php::Value startMethod;
 	Php::Value stopMethod;
-	void* call;
 	bool running;
 };
 }}
