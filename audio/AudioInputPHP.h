@@ -7,7 +7,6 @@
 #ifndef LIBTGVOIP_AUDIOINPUTPHP_H
 #define LIBTGVOIP_AUDIOINPUTPHP_H
 
-#include "phpcpp.h"
 #include "../libtgvoip/audio/AudioInput.h"
 #include "../libtgvoip/threading.h"
 
@@ -21,7 +20,7 @@ public:
 	virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
 	virtual void Start();
 	virtual void Stop();
-	void writeFrames(Php::Parameters &params);
+	bool writeFrames(const char* data);
 private:
 	Php::Value configureMethod;
 	Php::Value startMethod;

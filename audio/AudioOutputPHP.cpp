@@ -47,7 +47,7 @@ float AudioOutputPHP::GetLevel(){
 	return (double)getLevelMethod();
 }
 
-Php::Value AudioOutputPHP::readFrames() {
+unsigned char* AudioOutputPHP::readFrames() {
 	unsigned char* buf;
 	InvokeCallback(buf, 960*2);
 	return buf;

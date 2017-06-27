@@ -8,7 +8,6 @@
 #define LIBTGVOIP_AUDIOOUTPUTPHP_H
 
 #include "../libtgvoip/audio/AudioOutput.h"
-#include "phpcpp.h"
 
 namespace tgvoip{ namespace audio{
 class AudioOutputPHP : public AudioOutput{
@@ -22,7 +21,7 @@ public:
 	virtual void Stop();
 	virtual bool IsPlaying() override;
 	virtual float GetLevel() override;
-	Php::Value readFrames();
+	unsigned char* readFrames();
 
 private:
 	Php::Value configureMethod;

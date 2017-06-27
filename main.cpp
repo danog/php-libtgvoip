@@ -94,9 +94,9 @@ public:
     }
     
     
-    void writeFrames(Php::Parameters &params) {
+    Php::Value writeFrames(Php::Parameters &params) {
         AudioInputPHP* in=(AudioInputPHP*)(intptr_t)inst;
-        in->writeFrames(params);
+        return in->writeFrames(params[0]);
     }
 
     Php::Value readFrames() {

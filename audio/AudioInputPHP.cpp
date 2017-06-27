@@ -17,6 +17,7 @@ AudioInputPHP::AudioInputPHP(Php::Value callbacks){
 	startMethod = callbacks["start"];
 	stopMethod = callbacks["stop"];
 	configureMethod = callbacks["configure"];
+	running = false;
 }
 
 
@@ -39,11 +40,12 @@ void AudioInputPHP::Stop(){
 	stopMethod();
 	running = false;
 }
-void AudioInputPHP::writeFrames(Php::Parameters &params){
+bool AudioInputPHP::writeFrames(const char* data){
 	if(!running)
-		return;
+		return false;
 	unsigned char * buf;
-	memcpy(buf, params[0], 960*2);
+	memcpy(buf, data, 960*2);
 	InvokeCallback(buf, 960*2);
 	delete buf;
+	return true;
 }
