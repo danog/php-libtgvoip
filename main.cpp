@@ -16,32 +16,12 @@ If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <string>
 #include <vector>
+#include "phpcpp.h"
 #include "libtgvoip/VoIPServerConfig.h"
 #include "libtgvoip/VoIPController.h"
-#include "libtgvoip/NetworkSocket.h"
-#include "libtgvoip/logging.cpp"
-#include "libtgvoip/VoIPController.cpp"
-#include "libtgvoip/BufferInputStream.cpp"
-#include "libtgvoip/BufferOutputStream.cpp"
-#include "libtgvoip/BlockingQueue.cpp"
-#include "libtgvoip/MediaStreamItf.cpp"
-#include "libtgvoip/OpusEncoder.cpp"
-#include "libtgvoip/JitterBuffer.cpp"
-#include "libtgvoip/OpusDecoder.cpp"
-#include "libtgvoip/BufferPool.cpp"
-#include "libtgvoip/EchoCanceller.cpp"
-#include "libtgvoip/CongestionControl.cpp"
-#include "libtgvoip/VoIPServerConfig.cpp"
-#include "libtgvoip/NetworkSocket.cpp"
-#include "libtgvoip/os/posix/NetworkSocketPosix.cpp"
 
-
-#include "libtgvoip/audio/AudioInput.cpp"
-#include "libtgvoip/audio/AudioOutput.cpp"
-
-
-#include "audio/AudioInputPHP.cpp"
-#include "audio/AudioOutputPHP.cpp"
+#include "audio/AudioInputPHP.h"
+#include "audio/AudioOutputPHP.h"
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
