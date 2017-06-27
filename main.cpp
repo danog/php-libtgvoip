@@ -199,7 +199,7 @@ public:
     }
     
     void updateConnectionState(VoIPController* cntrlr, int state) {
-        setStateMethod(this, state);
+        setStateMethod(state);
     }
 private:
 
