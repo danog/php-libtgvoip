@@ -304,6 +304,9 @@ extern "C" {
         voip.constant("NET_TYPE_DIALUP", 10);
         voip.constant("NET_TYPE_OTHER_MOBILE", 11);
 
+        voip.constant("DATA_SAVING_NEVER", 0);
+        voip.constant("DATA_SAVING_MOBILE", 1);
+        voip.constant("DATA_SAVING_ALWAYS", 2);
         Php::Namespace danog("danog");
         Php::Namespace MadelineProto("MadelineProto");
 
