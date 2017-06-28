@@ -9,6 +9,7 @@
 
 #include "../libtgvoip/audio/AudioInput.h"
 #include "../libtgvoip/threading.h"
+#include <phpcpp.h>
 
 namespace tgvoip{ namespace audio{
 class AudioInputPHP : public AudioInput{
