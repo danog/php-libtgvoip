@@ -43,9 +43,9 @@ void AudioInputPHP::Stop(){
 bool AudioInputPHP::writeFrames(const char* data){
 	if(!running)
 		return false;
-	unsigned char * buf;
+	unsigned char * buf = (unsigned char *) malloc(960*2);
 	memcpy(buf, data, 960*2);
-	InvokeCallback(buf, 960*2);
+	InvokeCallback(buf, (size_t)960*2);
 	delete buf;
 	return true;
 }

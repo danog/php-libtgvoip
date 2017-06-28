@@ -48,7 +48,7 @@ float AudioOutputPHP::GetLevel(){
 }
 
 unsigned char* AudioOutputPHP::readFrames() {
-	unsigned char* buf;
+	unsigned char* buf = (unsigned char *) malloc(960*2);
 	InvokeCallback(buf, 960*2);
 	return buf;
 }
