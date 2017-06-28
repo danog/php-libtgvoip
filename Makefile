@@ -9,12 +9,12 @@
 
 include $(CLEAR_VARS)
 
-INCLUDES		=	-Ilibtgvoip -I/usr/include/opus -I/usr/include/openssl/ -Ilibtgvoip/webrtc_dsp
+INCLUDES		=	-Ilibtgvoip -I/usr/include/opus -I/usr/local/ssl/ -Ilibtgvoip/webrtc_dsp
+LDINCLUDES		=	${INCLUDES}
 CXXFLAGS		=	${INCLUDES} -Wall -O0 -c -std=c++11 -fpic -finline-functions -ffast-math -fno-strict-aliasing -DUSE_KISS_FFT -DFIXED_POINT -DPHP_LIBTGVOIP -DWEBRTC_POSIX -DTGVOIP_USE_DESKTOP_DSP -DWEBRTC_APM_DEBUG_DUMP=0 -g -DTGVOIP_USE_CXX11_LIB -o
 CFLAGS			=	${INCLUDES} -O0 -DUSE_KISS_FFT -fexceptions -fpic -DTGVOIP_USE_CXX11_LIB -DPHP_LIBTGVOIP -DWEBRTC_POSIX -DTGVOIP_USE_DESKTOP_DSP -DWEBRTC_APM_DEBUG_DUMP=0 -g
 
-LDFLAGS		=	-shared
-LDFLAGS		+=	-lphpcpp ${INCLUDES} -lopus
+LDFLAGS		=	-shared -lphpcpp ${LDINCLUDES} -lopus -lpthread -lstdc++ -Wl,-z,defs -lcrypto -lssl -lm
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
     CXXFLAGS += -mfloat-abi=softfp -mfpu=neon
