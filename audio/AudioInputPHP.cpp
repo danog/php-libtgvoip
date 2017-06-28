@@ -24,6 +24,8 @@ AudioInputPHP::AudioInputPHP(Php::Value callbacks){
 AudioInputPHP::~AudioInputPHP(){
 
 }
+
+
 void AudioInputPHP::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
 	configureMethod((int32_t)sampleRate, (int32_t)bitsPerSample, (int32_t)channels);
 }
@@ -31,9 +33,8 @@ void AudioInputPHP::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint3
 void AudioInputPHP::Start(){
 	if(running)
 		return;
-	startMethod();
 	running = true;
-
+	startMethod();
 }
 
 void AudioInputPHP::Stop(){
@@ -41,11 +42,18 @@ void AudioInputPHP::Stop(){
 	running = false;
 }
 bool AudioInputPHP::writeFrames(const char* data){
-	if(!running)
+	if (running) {
+		LOGE("STARTED");
+		unsigned char * buf = (unsigned char *) malloc(960*2*sizeof(unsigned char));
+		memcpy(buf, data, 960*2);
+		InvokeCallback(buf, (size_t)960*2);
+		delete buf;
+		return true;
+	} else {
+		LOGE("NOT STARTED");
 		return false;
-	unsigned char * buf = (unsigned char *) malloc(960*2);
-	memcpy(buf, data, 960*2);
-	InvokeCallback(buf, (size_t)960*2);
-	delete buf;
-	return true;
+	}/*
+	if (!running) {
+		return false;
+	}*/
 }

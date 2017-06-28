@@ -17,9 +17,11 @@ AudioOutputPHP::AudioOutputPHP(Php::Value callbacks){
 	stopMethod = callbacks["stop"];
 	configureMethod = callbacks["configure"];
 	getLevelMethod = callbacks["get_level"];
+	running = false;
 }
 AudioOutputPHP::~AudioOutputPHP(){
 }
+
 
 void AudioOutputPHP::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels){
 	configureMethod((int32_t)sampleRate, (int32_t)bitsPerSample, (int32_t)channels);
@@ -28,8 +30,8 @@ void AudioOutputPHP::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint
 void AudioOutputPHP::Start(){
 	if(running)
 		return;
-	startMethod();
 	running = true;
+	startMethod();
 }
 
 void AudioOutputPHP::Stop(){
