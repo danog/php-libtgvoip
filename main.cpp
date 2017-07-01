@@ -9,291 +9,270 @@ You should have received a copy of the GNU General Public License along with php
 If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#include <phpcpp.h>
-#include <string.h>
-#include <wchar.h>
-#include <map>
-#include <string>
-#include <vector>
-#include "phpcpp.h"
-#include "libtgvoip/VoIPServerConfig.h"
-#include "libtgvoip/VoIPController.h"
-
-#include "audio/AudioInputPHP.h"
-#include "audio/AudioOutputPHP.h"
+#include "main.h"
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-class VoIP : public Php::Base {
-public:
+void VoIP::__construct(Php::Parameters &params)
+{
+    setStateMethod = params[0];
+    madeline = params[3];
+    current_call = params[4];
+    inst = new VoIPController(params[1], params[2]);
+    inst->implData = static_cast<void *>(this);
+    inst->SetStateCallback([](tgvoip::VoIPController *controller, int state) {
+        static_cast<VoIP *>(controller->implData)->updateConnectionState(controller, state);
+    });
+}
 
-    void __construct(Php::Parameters &params) {
-        setStateMethod = params[0];
-        madeline = params[3];
-        current_call = params[4];
-        inst=new VoIPController(params[1], params[2]);
-        inst->implData = static_cast<void*>(this);
-        inst->SetStateCallback([](tgvoip::VoIPController *controller, int state) {
-	    	static_cast<VoIP*>(controller->implData)->updateConnectionState(controller, state);
-    	});
-        
-    }
+void VoIP::start()
+{
+    inst->Start();
+}
 
-    void start() {
-        inst->Start();
-    }
+void VoIP::connect()
+{
+    inst->Connect();
+}
+void VoIP::setEncryptionKey(Php::Parameters &params)
+{
 
-    void connect() {
-        inst->Connect();
-    }
-    void setEncryptionKey(Php::Parameters &params) {
-        
-        char* key = (char*)malloc(256);
-        memcpy(key, params[0], 256);
-        inst->SetEncryptionKey(key, (bool) params[1]);
-        free(key);
-    }
+    char *key = (char *)malloc(256);
+    memcpy(key, params[0], 256);
+    inst->SetEncryptionKey(key, (bool)params[1]);
+    free(key);
+}
 
-    void setRemoteEndpoints(Php::Parameters &params) {
-    
-        size_t len=(size_t) params[0].size();
-        //voip_endpoint_t* eps=(voip_endpoint_t *) malloc(sizeof(voip_endpoint_t)*len);
-        std::vector<Endpoint> eps;
-        uint i;
-        
-        for(i=0; i<len; i++) {
-            std::string ip = params[0][i]["ip"];
-            std::string ipv6 = params[0][i]["ipv6"];
-            std::string peer_tag = params[0][i]["peer_tag"];
+void VoIP::setRemoteEndpoints(Php::Parameters &params)
+{
 
+    size_t len = (size_t)params[0].size();
+    //voip_endpoint_t* eps=(voip_endpoint_t *) malloc(sizeof(voip_endpoint_t)*len);
+    std::vector<Endpoint> eps;
+    uint i;
 
-            tgvoip::IPv4Address v4addr(ip);
-            tgvoip::IPv6Address v6addr("::0");
-            unsigned char pTag[16];
+    for (i = 0; i < len; i++)
+    {
+        std::string ip = params[0][i]["ip"];
+        std::string ipv6 = params[0][i]["ipv6"];
+        std::string peer_tag = params[0][i]["peer_tag"];
 
-            if(ipv6 != ""){
-                v6addr=IPv6Address(ipv6);
-            }
+        tgvoip::IPv4Address v4addr(ip);
+        tgvoip::IPv6Address v6addr("::0");
+        unsigned char pTag[16];
 
-            if(peer_tag != "") {
-                memcpy(pTag, peer_tag.c_str(), 16);
-            }
-            
-            eps.push_back(Endpoint(params[0][i]["id"], (int32_t)params[0][i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
-
-        }
-        inst->SetRemoteEndpoints(eps, params[1]);
-        
-    }
-
-
-    void release() {
-        delete inst;
-    }
-    
-    
-    Php::Value writeFrames(Php::Parameters &params) {
-        AudioInputPHP* in=(AudioInputPHP*)(intptr_t)inst;
-        return in->writeFrames(params[0]);
-    }
-
-    Php::Value readFrames() {
-        AudioOutputPHP* out=(AudioOutputPHP*)(intptr_t)inst;
-        return out->readFrames();
-    }
-    
-    
-    Php::Value getDebugString() {
-        char buf[10240];
-        inst->GetDebugString(buf, 10240);
-        return buf;
-    }
-
-    void setNetworkType(Php::Parameters &params) {
-        inst->SetNetworkType(params[0]);
-    }
-
-    void setMicMute(Php::Parameters &params) {
-        inst->SetMicMute(params[0]);
-    }
-    // jdouble recvTimeout, jdouble initTimeout, jint dataSavingMode, jboolean enableAEC, jboolean enableNS, jboolean enableAGC, jstring logFilePath
-    void setConfig(Php::Parameters &params) {
-        voip_config_t cfg;
-        cfg.recv_timeout=params[0];
-        cfg.init_timeout=params[1];
-        cfg.data_saving=params[2];
-        cfg.enableAEC=params[3];
-        cfg.enableNS=params[4];
-        cfg.enableAGC=params[5];
-        if (params.size() == 7) {
-            strncpy(cfg.logFilePath, params[6], sizeof(cfg.logFilePath));
-            cfg.logFilePath[sizeof(cfg.logFilePath) - 1] = 0;
-        } else {
-            memset(cfg.logFilePath, 0, sizeof(cfg.logFilePath));
+        if (ipv6 != "")
+        {
+            v6addr = IPv6Address(ipv6);
         }
 
-        if (params.size() == 8) {
-            strncpy(cfg.statsDumpFilePath, params[7], sizeof(cfg.statsDumpFilePath));
-            cfg.statsDumpFilePath[sizeof(cfg.statsDumpFilePath) - 1] = 0;
-        } else {
-            memset(cfg.statsDumpFilePath, 0, sizeof(cfg.statsDumpFilePath));
+        if (peer_tag != "")
+        {
+            memcpy(pTag, peer_tag.c_str(), 16);
         }
-        inst->SetConfig(&cfg);
+
+        eps.push_back(Endpoint(params[0][i]["id"], (int32_t)params[0][i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
+    }
+    inst->SetRemoteEndpoints(eps, params[1]);
+}
+
+void VoIP::release()
+{
+    delete inst;
+}
+
+Php::Value VoIP::writeFrames(Php::Parameters &params)
+{
+    AudioInputPHP *in = (AudioInputPHP *)(intptr_t)inst;
+    return in->writeFrames(params[0]);
+}
+
+Php::Value VoIP::readFrames()
+{
+    AudioOutputPHP *out = (AudioOutputPHP *)(intptr_t)inst;
+    return out->readFrames();
+}
+
+Php::Value VoIP::getDebugString()
+{
+    char buf[10240];
+    inst->GetDebugString(buf, 10240);
+    return buf;
+}
+
+void VoIP::setNetworkType(Php::Parameters &params)
+{
+    inst->SetNetworkType(params[0]);
+}
+
+void VoIP::setMicMute(Php::Parameters &params)
+{
+    inst->SetMicMute(params[0]);
+}
+// jdouble recvTimeout, jdouble initTimeout, jint dataSavingMode, jboolean enableAEC, jboolean enableNS, jboolean enableAGC, jstring logFilePath
+void VoIP::setConfig(Php::Parameters &params)
+{
+    voip_config_t cfg;
+    cfg.recv_timeout = params[0];
+    cfg.init_timeout = params[1];
+    cfg.data_saving = params[2];
+    cfg.enableAEC = params[3];
+    cfg.enableNS = params[4];
+    cfg.enableAGC = params[5];
+    if (params.size() == 7)
+    {
+        strncpy(cfg.logFilePath, params[6], sizeof(cfg.logFilePath));
+        cfg.logFilePath[sizeof(cfg.logFilePath) - 1] = 0;
+    }
+    else
+    {
+        memset(cfg.logFilePath, 0, sizeof(cfg.logFilePath));
     }
 
-    void debugCtl(Php::Parameters &params) {
-        inst->DebugCtl(params[0], params[1]);
+    if (params.size() == 8)
+    {
+        strncpy(cfg.statsDumpFilePath, params[7], sizeof(cfg.statsDumpFilePath));
+        cfg.statsDumpFilePath[sizeof(cfg.statsDumpFilePath) - 1] = 0;
     }
-
-    Php::Value getVersion() {
-        return VoIPController::GetVersion();
+    else
+    {
+        memset(cfg.statsDumpFilePath, 0, sizeof(cfg.statsDumpFilePath));
     }
+    inst->SetConfig(&cfg);
+}
 
-    Php::Value getPreferredRelayID() {
-        return inst->GetPreferredRelayID();
-    }
+void VoIP::debugCtl(Php::Parameters &params)
+{
+    inst->DebugCtl(params[0], params[1]);
+}
 
-    Php::Value getLastError() {
-        return inst->GetLastError();
-    }
+Php::Value VoIP::getVersion()
+{
+    return VoIPController::GetVersion();
+}
 
-    Php::Value getStats() {
-        voip_stats_t _stats;
-        inst->GetStats(&_stats);
-        Php::Array stats;
-        stats["bytesSentWifi"] = (int64_t)_stats.bytesSentWifi;
-        stats["bytesSentMobile"] = (int64_t)_stats.bytesSentMobile;
-        stats["bytesRecvdWifi"] = (int64_t)_stats.bytesRecvdWifi;
-        stats["bytesRecvdMobile"] = (int64_t)_stats.bytesRecvdMobile;
-        return stats;
-    }
+Php::Value VoIP::getPreferredRelayID()
+{
+    return inst->GetPreferredRelayID();
+}
 
-    void setSharedConfig(Php::Parameters &params) {
-        ServerConfig::GetSharedInstance()->Update(params[0]);
-    }
+Php::Value VoIP::getLastError()
+{
+    return inst->GetLastError();
+}
 
-    Php::Value getDebugLog() {
-        return inst->GetDebugLog();
-    }
-    
-    void updateConnectionState(VoIPController* cntrlr, int state) {
-        setStateMethod(state);
-    }
-private:
+Php::Value VoIP::getStats()
+{
+    voip_stats_t _stats;
+    inst->GetStats(&_stats);
+    Php::Array stats;
+    stats["bytesSentWifi"] = (int64_t)_stats.bytesSentWifi;
+    stats["bytesSentMobile"] = (int64_t)_stats.bytesSentMobile;
+    stats["bytesRecvdWifi"] = (int64_t)_stats.bytesRecvdWifi;
+    stats["bytesRecvdMobile"] = (int64_t)_stats.bytesRecvdMobile;
+    return stats;
+}
 
-    VoIPController* inst;
-    Php::Value setStateMethod;
-    Php::Value madeline;
-    Php::Value current_call;
+void VoIP::setSharedConfig(Php::Parameters &params)
+{
+    ServerConfig::GetSharedInstance()->Update(params[0]);
+}
 
-};
+Php::Value VoIP::getDebugLog()
+{
+    return inst->GetDebugLog();
+}
+
+void VoIP::updateConnectionState(VoIPController *cntrlr, int state)
+{
+    setStateMethod(state);
+}
 
 extern "C" {
 
-    /**
+/**
      *  Function that is called by PHP right after the PHP process
      *  has started, and that returns an address of an internal PHP
      *  strucure with all the details and features of your extension
      *
      *  @return void*   a pointer to an address that is understood by PHP
      */
-    PHPCPP_EXPORT void *get_module()
-    {
-        // static(!) Php::Extension object that should stay in memory
-        // for the entire duration of the process (that's why it's static)
-        static Php::Extension extension("php-libtgvoip", "1.0");
+PHPCPP_EXPORT void *get_module()
+{
+    // static(!) Php::Extension object that should stay in memory
+    // for the entire duration of the process (that's why it's static)
+    static Php::Extension extension("php-libtgvoip", "1.0");
 
+    // description of the class so that PHP knows which methods are accessible
+    Php::Class<VoIP> voip("VoIP");
+    voip.method<&VoIP::__construct>("__construct", {
+                                                       Php::ByVal("setStateCallable", Php::Type::Callable), Php::ByVal("inputCallables", Php::Type::Array), Php::ByVal("outputCallables", Php::Type::Array), Php::ByRef("madelineProto", Php::Type::Object), Php::ByRef("currentCall", Php::Type::Array),
+                                                   });
+    voip.method<&VoIP::setEncryptionKey>("setEncryptionKey", {
+                                                                 Php::ByVal("key", Php::Type::String), Php::ByVal("isOutgoing", Php::Type::Bool),
+                                                             });
+    voip.method<&VoIP::setNetworkType>("setNetworkType", {
+                                                             Php::ByVal("type", Php::Type::Numeric),
+                                                         });
+    voip.method<&VoIP::setMicMute>("setMicMute", {
+                                                     Php::ByVal("type", Php::Type::Bool),
+                                                 });
+    voip.method<&VoIP::debugCtl>("debugCtl", {
+                                                 Php::ByVal("request", Php::Type::Numeric), Php::ByVal("param", Php::Type::Numeric),
+                                             });
+    voip.method<&VoIP::setConfig>("setConfig", {
+                                                   // jdouble recvTimeout, jdouble initTimeout, jint dataSavingMode, jboolean enableAEC, jboolean enableNS, jboolean enableAGC, jstring logFilePath
+                                                   Php::ByVal("recvTimeout", Php::Type::Float), Php::ByVal("initTimeout", Php::Type::Float), Php::ByVal("dataSavingMode", Php::Type::Bool), Php::ByVal("enableAEC", Php::Type::Bool), Php::ByVal("enableNS", Php::Type::Bool), Php::ByVal("enableAGC", Php::Type::Bool), Php::ByVal("logFilePath", Php::Type::String, false), Php::ByVal("statsDumpFilePath", Php::Type::String, false),
+                                               });
+    voip.method<&VoIP::setSharedConfig>("setSharedConfig", {Php::ByVal("config", Php::Type::Array)});
+    voip.method<&VoIP::setRemoteEndpoints>("setRemoteEndpoints", {Php::ByVal("endpoints", Php::Type::Array), Php::ByVal("allowP2P", Php::Type::Bool)});
+    voip.method<&VoIP::getDebugLog>("getDebugLog");
+    voip.method<&VoIP::getLastError>("getLastError");
+    voip.method<&VoIP::getPreferredRelayID>("getPreferredRelayID");
+    voip.method<&VoIP::getVersion>("getVersion");
+    voip.method<&VoIP::getDebugString>("getDebugString");
+    voip.method<&VoIP::getStats>("getStats");
+    voip.method<&VoIP::release>("release");
+    voip.method<&VoIP::start>("start");
+    voip.method<&VoIP::connect>("connect");
 
-        // description of the class so that PHP knows which methods are accessible
-        Php::Class<VoIP> voip("VoIP");
-        voip.method<&VoIP::__construct> ("__construct", {
-            Php::ByVal("setStateCallable", Php::Type::Callable),
-            Php::ByVal("inputCallables", Php::Type::Array),
-            Php::ByVal("outputCallables", Php::Type::Array),
-            Php::ByRef("madelineProto", Php::Type::Object),
-            Php::ByRef("currentCall", Php::Type::Array),
-        });
-        voip.method<&VoIP::setEncryptionKey> ("setEncryptionKey", {
-            Php::ByVal("key", Php::Type::String),
-            Php::ByVal("isOutgoing", Php::Type::Bool),
-        });
-        voip.method<&VoIP::setNetworkType> ("setNetworkType", {
-            Php::ByVal("type", Php::Type::Numeric),
-        });
-        voip.method<&VoIP::setMicMute> ("setMicMute", {
-            Php::ByVal("type", Php::Type::Bool),
-        });
-        voip.method<&VoIP::debugCtl> ("debugCtl", {
-            Php::ByVal("request", Php::Type::Numeric),
-            Php::ByVal("param", Php::Type::Numeric),
-        });
-        voip.method<&VoIP::setConfig> ("setConfig", { // jdouble recvTimeout, jdouble initTimeout, jint dataSavingMode, jboolean enableAEC, jboolean enableNS, jboolean enableAGC, jstring logFilePath
-            Php::ByVal("recvTimeout", Php::Type::Float),
-            Php::ByVal("initTimeout", Php::Type::Float),
-            Php::ByVal("dataSavingMode", Php::Type::Bool),
-            Php::ByVal("enableAEC", Php::Type::Bool),
-            Php::ByVal("enableNS", Php::Type::Bool),
-            Php::ByVal("enableAGC", Php::Type::Bool),
-            Php::ByVal("logFilePath", Php::Type::String, false),
-            Php::ByVal("statsDumpFilePath", Php::Type::String, false),
-        });
-        voip.method<&VoIP::setSharedConfig> ("setSharedConfig", {
-            Php::ByVal("config", Php::Type::Array)
-        });
-        voip.method<&VoIP::setRemoteEndpoints> ("setRemoteEndpoints", {
-            Php::ByVal("endpoints", Php::Type::Array),
-            Php::ByVal("allowP2P", Php::Type::Bool)
-        });
-        voip.method<&VoIP::getDebugLog> ("getDebugLog");
-        voip.method<&VoIP::getLastError> ("getLastError");
-        voip.method<&VoIP::getPreferredRelayID> ("getPreferredRelayID");
-        voip.method<&VoIP::getVersion> ("getVersion");
-        voip.method<&VoIP::getDebugString> ("getDebugString");
-        voip.method<&VoIP::getStats> ("getStats");
-        voip.method<&VoIP::release> ("release");
-        voip.method<&VoIP::start> ("start");
-        voip.method<&VoIP::connect> ("connect");
+    voip.method<&VoIP::readFrames>("readFrames");
+    voip.method<&VoIP::writeFrames>("writeFrames", {Php::ByVal("frames", Php::Type::String)});
 
-        voip.method<&VoIP::readFrames> ("readFrames");
-        voip.method<&VoIP::writeFrames> ("writeFrames", {
-            Php::ByVal("frames", Php::Type::String)
-        });
-        
-        voip.constant("STATE_WAIT_INIT", 1);
-        voip.constant("STATE_WAIT_INIT_ACK", 2);
-        voip.constant("STATE_ESTABLISHED", 3);
-        voip.constant("STATE_FAILED", 4);
+    voip.constant("STATE_WAIT_INIT", 1);
+    voip.constant("STATE_WAIT_INIT_ACK", 2);
+    voip.constant("STATE_ESTABLISHED", 3);
+    voip.constant("STATE_FAILED", 4);
 
-        voip.constant("TGVOIP_ERROR_UNKNOWN", 0);
-        voip.constant("TGVOIP_ERROR_INCOMPATIBLE", 1);
-        voip.constant("TGVOIP_ERROR_TIMEOUT", 2);
-        voip.constant("TGVOIP_ERROR_AUDIO_IO", 3);
+    voip.constant("TGVOIP_ERROR_UNKNOWN", 0);
+    voip.constant("TGVOIP_ERROR_INCOMPATIBLE", 1);
+    voip.constant("TGVOIP_ERROR_TIMEOUT", 2);
+    voip.constant("TGVOIP_ERROR_AUDIO_IO", 3);
 
-        voip.constant("NET_TYPE_UNKNOWN", 0);
-        voip.constant("NET_TYPE_GPRS", 1);
-        voip.constant("NET_TYPE_EDGE", 2);
-        voip.constant("NET_TYPE_3G", 3);
-        voip.constant("NET_TYPE_HSPA", 4);
-        voip.constant("NET_TYPE_LTE", 5);
-        voip.constant("NET_TYPE_WIFI", 6);
-        voip.constant("NET_TYPE_ETHERNET", 7);
-        voip.constant("NET_TYPE_OTHER_HIGH_SPEED", 8);
-        voip.constant("NET_TYPE_OTHER_LOW_SPEED", 9);
-        voip.constant("NET_TYPE_DIALUP", 10);
-        voip.constant("NET_TYPE_OTHER_MOBILE", 11);
+    voip.constant("NET_TYPE_UNKNOWN", 0);
+    voip.constant("NET_TYPE_GPRS", 1);
+    voip.constant("NET_TYPE_EDGE", 2);
+    voip.constant("NET_TYPE_3G", 3);
+    voip.constant("NET_TYPE_HSPA", 4);
+    voip.constant("NET_TYPE_LTE", 5);
+    voip.constant("NET_TYPE_WIFI", 6);
+    voip.constant("NET_TYPE_ETHERNET", 7);
+    voip.constant("NET_TYPE_OTHER_HIGH_SPEED", 8);
+    voip.constant("NET_TYPE_OTHER_LOW_SPEED", 9);
+    voip.constant("NET_TYPE_DIALUP", 10);
+    voip.constant("NET_TYPE_OTHER_MOBILE", 11);
 
-        voip.constant("DATA_SAVING_NEVER", 0);
-        voip.constant("DATA_SAVING_MOBILE", 1);
-        voip.constant("DATA_SAVING_ALWAYS", 2);
-        Php::Namespace danog("danog");
-        Php::Namespace MadelineProto("MadelineProto");
+    voip.constant("DATA_SAVING_NEVER", 0);
+    voip.constant("DATA_SAVING_MOBILE", 1);
+    voip.constant("DATA_SAVING_ALWAYS", 2);
+    Php::Namespace danog("danog");
+    Php::Namespace MadelineProto("MadelineProto");
 
-        MadelineProto.add(std::move(voip));
-        danog.add(std::move(MadelineProto));
-        extension.add(std::move(danog));
-        
-        return extension;
-    }
+    MadelineProto.add(std::move(voip));
+    danog.add(std::move(MadelineProto));
+    extension.add(std::move(danog));
+
+    return extension;
+}
 }
