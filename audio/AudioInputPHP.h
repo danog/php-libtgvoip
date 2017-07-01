@@ -9,13 +9,18 @@
 
 #include "../libtgvoip/audio/AudioInput.h"
 #include "../libtgvoip/threading.h"
-#include <phpcpp.h>
+#include "../main.h"
+#include "../libtgvoip/VoIPController.h"
+
+
+using namespace tgvoip;
+using namespace tgvoip::audio;
 
 namespace tgvoip{ namespace audio{
 class AudioInputPHP : public AudioInput{
 
 public:
-	AudioInputPHP(Php::Value callbacks);
+	AudioInputPHP(void* controller);
 	virtual ~AudioInputPHP();
 
 	virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
@@ -23,9 +28,8 @@ public:
 	virtual void Stop();
 	bool writeFrames(const char* data);
 private:
-	Php::Value configureMethod;
-	Php::Value startMethod;
-	Php::Value stopMethod;
+	
+	VoIP* wrapper;
 	bool running;
 };
 }}

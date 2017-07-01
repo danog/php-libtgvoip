@@ -13,11 +13,8 @@ using namespace tgvoip;
 using namespace tgvoip::audio;
 
 
-AudioInputPHP::AudioInputPHP(Php::Value callbacks){
-	startMethod = callbacks["start"];
-	stopMethod = callbacks["stop"];
-	configureMethod = callbacks["configure"];
-	running = false;
+AudioInputPHP::AudioInputPHP(void* controller){
+	wrapper = (VoIP *)((VoIPController*)controller)->implData;
 }
 
 
@@ -27,18 +24,18 @@ AudioInputPHP::~AudioInputPHP(){
 
 
 void AudioInputPHP::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
-	configureMethod((int32_t)sampleRate, (int32_t)bitsPerSample, (int32_t)channels);
+	wrapper->configureAudioInput((int32_t)sampleRate, (int32_t)bitsPerSample, (int32_t)channels);
 }
 
 void AudioInputPHP::Start(){
 	if(running)
 		return;
 	running = true;
-	startMethod();
+	wrapper->startInput();
 }
 
 void AudioInputPHP::Stop(){
-	stopMethod();
+	wrapper->stopInput();
 	running = false;
 }
 bool AudioInputPHP::writeFrames(const char* data){

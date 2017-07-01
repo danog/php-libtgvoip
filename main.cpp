@@ -10,16 +10,26 @@ If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "main.h"
+#include <string.h>
+#include <wchar.h>
+#include <map>
+#include <string>
+#include <vector>
+
+#include "libtgvoip/VoIPServerConfig.h"
+
+#include "audio/AudioInputPHP.h"
+#include "audio/AudioOutputPHP.h"
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
 void VoIP::__construct(Php::Parameters &params)
 {
-    setStateMethod = params[0];
-    madeline = params[3];
-    current_call = params[4];
-    inst = new VoIPController(params[1], params[2]);
+    madeline = params[1];
+    current_call = params[2];
+
+    inst = new VoIPController();
     inst->implData = static_cast<void *>(this);
     inst->SetStateCallback([](tgvoip::VoIPController *controller, int state) {
         static_cast<VoIP *>(controller->implData)->updateConnectionState(controller, state);
@@ -186,7 +196,40 @@ Php::Value VoIP::getDebugLog()
 
 void VoIP::updateConnectionState(VoIPController *cntrlr, int state)
 {
-    setStateMethod(state);
+    ((Php::Object)this).call("setState", state);
+    //setStateMethod(state);
+}
+
+void VoIP::startInput()
+{
+    ((Php::Object)this).call("startInput");
+}
+
+void VoIP::startOutput()
+{
+    ((Php::Object)this).call("startOutput");
+
+}
+
+void VoIP::stopInput()
+{
+    ((Php::Object)this).call("stopInput");
+}
+void VoIP::stopOutput()
+{
+    ((Php::Object)this).call("startInput");
+}
+
+
+void VoIP::configureAudioInput(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
+    ((Php::Object)this).call("configureAudioInput");
+
+}
+void VoIP::configureAudioOutput(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
+    ((Php::Object)this).call("configureAudioOutput");
+}
+float VoIP::getOutputLevel() {
+    return (double)((Php::Object)this).call("getOutputLevel");
 }
 
 extern "C" {
@@ -206,39 +249,59 @@ PHPCPP_EXPORT void *get_module()
 
     // description of the class so that PHP knows which methods are accessible
     Php::Class<VoIP> voip("VoIP");
-    voip.method<&VoIP::__construct>("__construct", {
-                                                       Php::ByVal("setStateCallable", Php::Type::Callable), Php::ByVal("inputCallables", Php::Type::Array), Php::ByVal("outputCallables", Php::Type::Array), Php::ByRef("madelineProto", Php::Type::Object), Php::ByRef("currentCall", Php::Type::Array),
-                                                   });
-    voip.method<&VoIP::setEncryptionKey>("setEncryptionKey", {
-                                                                 Php::ByVal("key", Php::Type::String), Php::ByVal("isOutgoing", Php::Type::Bool),
-                                                             });
-    voip.method<&VoIP::setNetworkType>("setNetworkType", {
-                                                             Php::ByVal("type", Php::Type::Numeric),
-                                                         });
-    voip.method<&VoIP::setMicMute>("setMicMute", {
-                                                     Php::ByVal("type", Php::Type::Bool),
-                                                 });
-    voip.method<&VoIP::debugCtl>("debugCtl", {
-                                                 Php::ByVal("request", Php::Type::Numeric), Php::ByVal("param", Php::Type::Numeric),
-                                             });
-    voip.method<&VoIP::setConfig>("setConfig", {
-                                                   // jdouble recvTimeout, jdouble initTimeout, jint dataSavingMode, jboolean enableAEC, jboolean enableNS, jboolean enableAGC, jstring logFilePath
-                                                   Php::ByVal("recvTimeout", Php::Type::Float), Php::ByVal("initTimeout", Php::Type::Float), Php::ByVal("dataSavingMode", Php::Type::Bool), Php::ByVal("enableAEC", Php::Type::Bool), Php::ByVal("enableNS", Php::Type::Bool), Php::ByVal("enableAGC", Php::Type::Bool), Php::ByVal("logFilePath", Php::Type::String, false), Php::ByVal("statsDumpFilePath", Php::Type::String, false),
-                                               });
-    voip.method<&VoIP::setSharedConfig>("setSharedConfig", {Php::ByVal("config", Php::Type::Array)});
-    voip.method<&VoIP::setRemoteEndpoints>("setRemoteEndpoints", {Php::ByVal("endpoints", Php::Type::Array), Php::ByVal("allowP2P", Php::Type::Bool)});
-    voip.method<&VoIP::getDebugLog>("getDebugLog");
-    voip.method<&VoIP::getLastError>("getLastError");
-    voip.method<&VoIP::getPreferredRelayID>("getPreferredRelayID");
-    voip.method<&VoIP::getVersion>("getVersion");
-    voip.method<&VoIP::getDebugString>("getDebugString");
-    voip.method<&VoIP::getStats>("getStats");
-    voip.method<&VoIP::release>("release");
-    voip.method<&VoIP::start>("start");
-    voip.method<&VoIP::connect>("connect");
 
-    voip.method<&VoIP::readFrames>("readFrames");
-    voip.method<&VoIP::writeFrames>("writeFrames", {Php::ByVal("frames", Php::Type::String)});
+    voip.method("setState", {
+        Php::ByVal("state", Php::Type::Numeric),
+    });
+
+    voip.method("startOutput");
+    voip.method("stopOutput");
+    voip.method("stopInput");
+    voip.method("configureAudioOutput", {
+        Php::ByVal("sampleRate", Php::Type::Numeric),
+        Php::ByVal("bitsPerSample", Php::Type::Numeric),
+        Php::ByVal("channels", Php::Type::Numeric),
+    });
+    voip.method("configureAudioInput", {
+        Php::ByVal("sampleRate", Php::Type::Numeric),
+        Php::ByVal("bitsPerSample", Php::Type::Numeric),
+        Php::ByVal("channels", Php::Type::Numeric),
+    });
+    voip.method("getOutputLevel");
+
+    voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final, {
+        Php::ByRef("madelineProto", Php::Type::Object), Php::ByVal("currentCall", Php::Type::Numeric),
+    });
+    voip.method<&VoIP::setEncryptionKey>("setEncryptionKey", Php::Public | Php::Final, {
+        Php::ByVal("key", Php::Type::String), Php::ByVal("isOutgoing", Php::Type::Bool),
+    });
+    voip.method<&VoIP::setNetworkType>("setNetworkType", Php::Public | Php::Final, {
+        Php::ByVal("type", Php::Type::Numeric),
+    });
+    voip.method<&VoIP::setMicMute>("setMicMute", Php::Public | Php::Final, {
+        Php::ByVal("type", Php::Type::Bool),
+    });
+    voip.method<&VoIP::debugCtl>("debugCtl", Php::Public | Php::Final, {
+        Php::ByVal("request", Php::Type::Numeric), Php::ByVal("param", Php::Type::Numeric),
+    });
+    voip.method<&VoIP::setConfig>("setConfig", Php::Public | Php::Final, {
+        // jdouble recvTimeout, jdouble initTimeout, jint dataSavingMode, jboolean enableAEC, jboolean enableNS, jboolean enableAGC, jstring logFilePath
+        Php::ByVal("recvTimeout", Php::Type::Float), Php::ByVal("initTimeout", Php::Type::Float), Php::ByVal("dataSavingMode", Php::Type::Bool), Php::ByVal("enableAEC", Php::Type::Bool), Php::ByVal("enableNS", Php::Type::Bool), Php::ByVal("enableAGC", Php::Type::Bool), Php::ByVal("logFilePath", Php::Type::String, false), Php::ByVal("statsDumpFilePath", Php::Type::String, false),
+    });
+    voip.method<&VoIP::setSharedConfig>("setSharedConfig", Php::Public | Php::Final, {Php::ByVal("config", Php::Type::Array)});
+    voip.method<&VoIP::setRemoteEndpoints>("setRemoteEndpoints", Php::Public | Php::Final, {Php::ByVal("endpoints", Php::Type::Array), Php::ByVal("allowP2P", Php::Type::Bool)});
+    voip.method<&VoIP::getDebugLog>("getDebugLog", Php::Public | Php::Final);
+    voip.method<&VoIP::getLastError>("getLastError", Php::Public | Php::Final);
+    voip.method<&VoIP::getPreferredRelayID>("getPreferredRelayID", Php::Public | Php::Final);
+    voip.method<&VoIP::getVersion>("getVersion", Php::Public | Php::Final);
+    voip.method<&VoIP::getDebugString>("getDebugString", Php::Public | Php::Final);
+    voip.method<&VoIP::getStats>("getStats", Php::Public | Php::Final);
+    voip.method<&VoIP::release>("release", Php::Public | Php::Final);
+    voip.method<&VoIP::start>("start", Php::Public | Php::Final);
+    voip.method<&VoIP::connect>("connect", Php::Public | Php::Final);
+
+    voip.method<&VoIP::readFrames>("readFrames", Php::Public | Php::Final);
+    voip.method<&VoIP::writeFrames>("writeFrames", Php::Public | Php::Final, {Php::ByVal("frames", Php::Type::String)});
 
     voip.constant("STATE_WAIT_INIT", 1);
     voip.constant("STATE_WAIT_INIT_ACK", 2);
@@ -266,9 +329,10 @@ PHPCPP_EXPORT void *get_module()
     voip.constant("DATA_SAVING_NEVER", 0);
     voip.constant("DATA_SAVING_MOBILE", 1);
     voip.constant("DATA_SAVING_ALWAYS", 2);
+
     Php::Namespace danog("danog");
     Php::Namespace MadelineProto("MadelineProto");
-
+    
     MadelineProto.add(std::move(voip));
     danog.add(std::move(MadelineProto));
     extension.add(std::move(danog));

@@ -8,14 +8,15 @@
 #define LIBTGVOIP_AUDIOOUTPUTPHP_H
 
 #include "../libtgvoip/audio/AudioOutput.h"
-#include <phpcpp.h>
+#include "../main.h"
+#include "../libtgvoip/VoIPController.h"
 
 namespace tgvoip{ namespace audio{
 class AudioOutputPHP : public AudioOutput{
 
 public:
 
-	AudioOutputPHP(Php::Value callbacks);
+	AudioOutputPHP(void* controller);
 	virtual ~AudioOutputPHP();
 	virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
 	virtual void Start();
@@ -25,11 +26,7 @@ public:
 	unsigned char* readFrames();
 
 private:
-	Php::Value configureMethod;
-	Php::Value startMethod;
-	Php::Value stopMethod;
-	Php::Value isPlayingMethod;
-	Php::Value getLevelMethod;
+	VoIP* wrapper;
 	bool running;
 };
 }}

@@ -12,32 +12,28 @@
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-AudioOutputPHP::AudioOutputPHP(Php::Value callbacks){
-	startMethod = callbacks["start"];
-	stopMethod = callbacks["stop"];
-	configureMethod = callbacks["configure"];
-	getLevelMethod = callbacks["get_level"];
-	running = false;
+AudioOutputPHP::AudioOutputPHP(void* controller){
+	wrapper = (VoIP *)((VoIPController*)controller)->implData;
 }
 AudioOutputPHP::~AudioOutputPHP(){
 }
 
 
 void AudioOutputPHP::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels){
-	configureMethod((int32_t)sampleRate, (int32_t)bitsPerSample, (int32_t)channels);
+	wrapper->configureAudioOutput((int32_t)sampleRate, (int32_t)bitsPerSample, (int32_t)channels);
 }
 
 void AudioOutputPHP::Start(){
 	if(running)
 		return;
 	running = true;
-	startMethod();
+	wrapper->startOutput();
 }
 
 void AudioOutputPHP::Stop(){
 	if(!running)
 		return;
-	stopMethod();
+	wrapper->stopOutput();
 	running = false;
 }
 
@@ -46,7 +42,7 @@ bool AudioOutputPHP::IsPlaying(){
 }
 
 float AudioOutputPHP::GetLevel(){
-	return (double)getLevelMethod();
+	return wrapper->getOutputLevel();
 }
 
 unsigned char* AudioOutputPHP::readFrames() {

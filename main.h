@@ -8,24 +8,16 @@ See the GNU Affero General Public License for more details.
 You should have received a copy of the GNU General Public License along with php-libtgvoip.
 If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef PHPLIBTGVOIP_H
+#define PHPLIBTGVOIP_H
 
-#include <string.h>
-#include <wchar.h>
-#include <map>
-#include <string>
-#include <vector>
-
-#include "libtgvoip/VoIPServerConfig.h"
 #include "libtgvoip/VoIPController.h"
-
-#include "audio/AudioInputPHP.h"
-#include "audio/AudioOutputPHP.h"
-
 #include <phpcpp.h>
 
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
+
 class VoIP : public Php::Base {
 public:
 
@@ -70,6 +62,17 @@ public:
     Php::Value getDebugLog();
     
     void updateConnectionState(VoIPController* cntrlr, int state);
+
+    void startInput();
+    void startOutput();
+
+    void stopInput();
+    void stopOutput();
+
+    void configureAudioInput(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
+    void configureAudioOutput(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
+
+    float getOutputLevel();
 private:
 
     VoIPController* inst;
@@ -78,3 +81,5 @@ private:
     Php::Value current_call;
 
 };
+
+#endif
