@@ -10,7 +10,7 @@
 include $(CLEAR_VARS)
 
 INCLUDES		=	-Ilibtgvoip -I/usr/include/opus -I/usr/local/ssl/include/ -Ilibtgvoip/webrtc_dsp
-LDINCLUDES		=	-L/usr/local/ssl
+LDINCLUDES		=	-L/usr/local/ssl/lib
 CXXFLAGS		=	${INCLUDES} -O0 -Wall -c -std=c++11 -fpic -finline-functions -ffast-math -fno-strict-aliasing -DUSE_KISS_FFT -DFIXED_POINT -DPHP_LIBTGVOIP -DWEBRTC_POSIX -DTGVOIP_USE_DESKTOP_DSP -DWEBRTC_APM_DEBUG_DUMP=0 -g -DTGVOIP_USE_CXX11_LIB -o
 CFLAGS			=	${INCLUDES} -O0 -DUSE_KISS_FFT -fexceptions -fpic -DPHP_LIBTGVOIP -DWEBRTC_POSIX -DTGVOIP_USE_DESKTOP_DSP -DWEBRTC_APM_DEBUG_DUMP=0 -g
 
