@@ -151,7 +151,11 @@ void VoIP::setConfig(Php::Parameters &params)
     }
     inst->SetConfig(&cfg);
 }
-
+// int protocol, std::string address, uint16_t port, std::string username, std::string password
+void VoIP::setProxy(Php::Parameters &params)
+{
+    inst->SetProxy(params[0], params[1], (int32_t) params[2], params[3], params[4]);
+}
 void VoIP::debugCtl(Php::Parameters &params)
 {
     inst->DebugCtl(params[0], params[1]);
@@ -196,7 +200,8 @@ Php::Value VoIP::getDebugLog()
 
 void VoIP::updateConnectionState(VoIPController *cntrlr, int state)
 {
-    ((Php::Object)this).call("setState", state);
+    Php::Object a = this;
+    a.call("setState", state);
     //setStateMethod(state);
 }
 
@@ -222,16 +227,44 @@ void VoIP::stopOutput()
 
 
 void VoIP::configureAudioInput(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
-    ((Php::Object)this).call("configureAudioInput");
-
+    inputSampleRate = sampleRate;
+    inputBitsPerSample = bitsPerSample;
+    inputChannels = channels;
+    inputSamplePeriod = 1/sampleRate*1000000;
+    inputWritePeriod = 1/sampleRate*960*1000000;
+    configuredInput = true;
 }
 void VoIP::configureAudioOutput(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
-    ((Php::Object)this).call("configureAudioOutput");
+    outputSampleRate = sampleRate;
+    outputBitsPerSample = bitsPerSample;
+    outputChannels = channels;
+    outputSamplePeriod = 1/sampleRate;
+    outputWritePeriod = 1/sampleRate*960*1000000;
+    configuredOutput = true;
 }
 float VoIP::getOutputLevel() {
     return (double)((Php::Object)this).call("getOutputLevel");
 }
 
+Php::Value VoIP::getCallConfig() {
+    Php::Value result;
+    if (configuredInput) {
+        result["input"]["sampleRate"] = inputSampleRate;
+        result["input"]["bitsPerSample"] = inputBitsPerSample;
+        result["input"]["channels"] = inputChannels;
+        result["input"]["samplePeriod"] = inputSamplePeriod;
+        result["input"]["writePeriod"] = inputWritePeriod;
+    }
+    if (configuredOutput) {
+        result["output"]["sampleRate"] = outputSampleRate;
+        result["output"]["bitsPerSample"] = outputBitsPerSample;
+        result["output"]["channels"] = outputChannels;
+        result["output"]["samplePeriod"] = outputSamplePeriod;
+        result["output"]["writePeriod"] = outputWritePeriod;
+    }
+
+    return result;
+}
 extern "C" {
 
 /**
@@ -257,18 +290,9 @@ PHPCPP_EXPORT void *get_module()
     voip.method("startOutput");
     voip.method("stopOutput");
     voip.method("stopInput");
-    voip.method("configureAudioOutput", {
-        Php::ByVal("sampleRate", Php::Type::Numeric),
-        Php::ByVal("bitsPerSample", Php::Type::Numeric),
-        Php::ByVal("channels", Php::Type::Numeric),
-    });
-    voip.method("configureAudioInput", {
-        Php::ByVal("sampleRate", Php::Type::Numeric),
-        Php::ByVal("bitsPerSample", Php::Type::Numeric),
-        Php::ByVal("channels", Php::Type::Numeric),
-    });
     voip.method("getOutputLevel");
 
+    voip.method<&VoIP::getCallConfig>("getCallConfig");
     voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final, {
         Php::ByRef("madelineProto", Php::Type::Object), Php::ByVal("currentCall", Php::Type::Numeric),
     });
@@ -288,6 +312,10 @@ PHPCPP_EXPORT void *get_module()
         // jdouble recvTimeout, jdouble initTimeout, jint dataSavingMode, jboolean enableAEC, jboolean enableNS, jboolean enableAGC, jstring logFilePath
         Php::ByVal("recvTimeout", Php::Type::Float), Php::ByVal("initTimeout", Php::Type::Float), Php::ByVal("dataSavingMode", Php::Type::Bool), Php::ByVal("enableAEC", Php::Type::Bool), Php::ByVal("enableNS", Php::Type::Bool), Php::ByVal("enableAGC", Php::Type::Bool), Php::ByVal("logFilePath", Php::Type::String, false), Php::ByVal("statsDumpFilePath", Php::Type::String, false),
     });
+    voip.method<&VoIP::setProxy>("setProxy", Php::Public | Php::Final, {
+        // int protocol, std::string address, uint16_t port, std::string username, std::string password
+        Php::ByVal("protocol", Php::Type::Numeric), Php::ByVal("address", Php::Type::String), Php::ByVal("port", Php::Type::Numeric), Php::ByVal("username", Php::Type::String), Php::ByVal("password", Php::Type::String),
+    });
     voip.method<&VoIP::setSharedConfig>("setSharedConfig", Php::Public | Php::Final, {Php::ByVal("config", Php::Type::Array)});
     voip.method<&VoIP::setRemoteEndpoints>("setRemoteEndpoints", Php::Public | Php::Final, {Php::ByVal("endpoints", Php::Type::Array), Php::ByVal("allowP2P", Php::Type::Bool)});
     voip.method<&VoIP::getDebugLog>("getDebugLog", Php::Public | Php::Final);
@@ -303,32 +331,40 @@ PHPCPP_EXPORT void *get_module()
     voip.method<&VoIP::readFrames>("readFrames", Php::Public | Php::Final);
     voip.method<&VoIP::writeFrames>("writeFrames", Php::Public | Php::Final, {Php::ByVal("frames", Php::Type::String)});
 
-    voip.constant("STATE_WAIT_INIT", 1);
-    voip.constant("STATE_WAIT_INIT_ACK", 2);
-    voip.constant("STATE_ESTABLISHED", 3);
-    voip.constant("STATE_FAILED", 4);
+    voip.constant("STATE_WAIT_INIT", STATE_WAIT_INIT);
+    voip.constant("STATE_WAIT_INIT_ACK", STATE_WAIT_INIT_ACK);
+    voip.constant("STATE_ESTABLISHED", STATE_ESTABLISHED);
+    voip.constant("STATE_FAILED", STATE_FAILED);
+    voip.constant("STATE_RECONNECTING", STATE_RECONNECTING);
 
-    voip.constant("TGVOIP_ERROR_UNKNOWN", 0);
-    voip.constant("TGVOIP_ERROR_INCOMPATIBLE", 1);
-    voip.constant("TGVOIP_ERROR_TIMEOUT", 2);
-    voip.constant("TGVOIP_ERROR_AUDIO_IO", 3);
+    voip.constant("TGVOIP_ERROR_UNKNOWN", TGVOIP_ERROR_UNKNOWN);
+    voip.constant("TGVOIP_ERROR_INCOMPATIBLE", TGVOIP_ERROR_INCOMPATIBLE);
+    voip.constant("TGVOIP_ERROR_TIMEOUT", TGVOIP_ERROR_TIMEOUT);
+    voip.constant("TGVOIP_ERROR_AUDIO_IO", TGVOIP_ERROR_AUDIO_IO);
 
-    voip.constant("NET_TYPE_UNKNOWN", 0);
-    voip.constant("NET_TYPE_GPRS", 1);
-    voip.constant("NET_TYPE_EDGE", 2);
-    voip.constant("NET_TYPE_3G", 3);
-    voip.constant("NET_TYPE_HSPA", 4);
-    voip.constant("NET_TYPE_LTE", 5);
-    voip.constant("NET_TYPE_WIFI", 6);
-    voip.constant("NET_TYPE_ETHERNET", 7);
-    voip.constant("NET_TYPE_OTHER_HIGH_SPEED", 8);
-    voip.constant("NET_TYPE_OTHER_LOW_SPEED", 9);
-    voip.constant("NET_TYPE_DIALUP", 10);
-    voip.constant("NET_TYPE_OTHER_MOBILE", 11);
+    voip.constant("NET_TYPE_UNKNOWN", NET_TYPE_UNKNOWN);
+    voip.constant("NET_TYPE_GPRS", NET_TYPE_GPRS);
+    voip.constant("NET_TYPE_EDGE", NET_TYPE_EDGE);
+    voip.constant("NET_TYPE_3G", NET_TYPE_3G);
+    voip.constant("NET_TYPE_HSPA", NET_TYPE_HSPA);
+    voip.constant("NET_TYPE_LTE", NET_TYPE_LTE);
+    voip.constant("NET_TYPE_WIFI", NET_TYPE_WIFI);
+    voip.constant("NET_TYPE_ETHERNET", NET_TYPE_ETHERNET);
+    voip.constant("NET_TYPE_OTHER_HIGH_SPEED", NET_TYPE_OTHER_HIGH_SPEED);
+    voip.constant("NET_TYPE_OTHER_LOW_SPEED", NET_TYPE_OTHER_LOW_SPEED);
+    voip.constant("NET_TYPE_DIALUP", NET_TYPE_DIALUP);
+    voip.constant("NET_TYPE_OTHER_MOBILE", NET_TYPE_OTHER_MOBILE);
 
-    voip.constant("DATA_SAVING_NEVER", 0);
-    voip.constant("DATA_SAVING_MOBILE", 1);
-    voip.constant("DATA_SAVING_ALWAYS", 2);
+    voip.constant("DATA_SAVING_NEVER", DATA_SAVING_NEVER);
+    voip.constant("DATA_SAVING_MOBILE", DATA_SAVING_MOBILE);
+    voip.constant("DATA_SAVING_ALWAYS", DATA_SAVING_ALWAYS);
+
+    voip.constant("PROXY_NONE", PROXY_NONE);
+    voip.constant("PROXY_SOCKS5", PROXY_SOCKS5);
+
+
+    voip.constant("FRAME_NUMBER", 960);
+    voip.constant("FRAME_SIZE", 960*2);
 
     Php::Namespace danog("danog");
     Php::Namespace MadelineProto("MadelineProto");

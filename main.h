@@ -59,6 +59,8 @@ public:
 
     void setSharedConfig(Php::Parameters &params);
 
+    void setProxy(Php::Parameters &params);
+
     Php::Value getDebugLog();
     
     void updateConnectionState(VoIPController* cntrlr, int state);
@@ -73,12 +75,30 @@ public:
     void configureAudioOutput(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
 
     float getOutputLevel();
-private:
 
-    VoIPController* inst;
-    Php::Value setStateMethod;
+    Php::Value getCallConfig();
+
+
     Php::Value madeline;
     Php::Value current_call;
+    int inputBitsPerSample;
+    int outputBitsPerSample;
+    int inputSampleRate;
+    int outputSampleRate;
+    int inputChannels;
+    int outputChannels;
+
+    int inputSamplePeriod;
+    int outputSamplePeriod;
+
+    int inputWritePeriod;
+    int outputWritePeriod;
+
+    bool configuredInput = false;
+    bool configuredOutput = false;
+
+private:
+    VoIPController* inst;
 
 };
 
