@@ -5,7 +5,7 @@
 //
 
 
-#include "AudioInputPHP.h"
+#include "AudioInputModule.h"
 #include <stdio.h>
 #include "../libtgvoip/logging.h"
 
@@ -13,32 +13,32 @@ using namespace tgvoip;
 using namespace tgvoip::audio;
 
 
-AudioInputPHP::AudioInputPHP(void* controller){
-	wrapper = (VoIP *)((VoIPController*)controller)->implData;
+AudioInputModule::AudioInputModule(std::string deviceID, void* controller){
+	wrapper = (VoIP *)((VoIPController *)controller)->implData;
 }
 
 
-AudioInputPHP::~AudioInputPHP(){
+AudioInputModule::~AudioInputModule(){
 
 }
 
 
-void AudioInputPHP::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
-	wrapper->configureAudioInput((int32_t)sampleRate, (int32_t)bitsPerSample, (int32_t)channels);
+void AudioInputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
+	wrapper->configureAudioInput(sampleRate, bitsPerSample, channels);
 }
 
-void AudioInputPHP::Start(){
+void AudioInputModule::Start(){
 	if(running)
 		return;
 	running = true;
 	wrapper->startInput();
 }
 
-void AudioInputPHP::Stop(){
+void AudioInputModule::Stop(){
 	wrapper->stopInput();
 	running = false;
 }
-bool AudioInputPHP::writeFrames(const char* data){
+bool AudioInputModule::writeFrames(const char* data){
 	if (running) {
 		LOGE("STARTED");
 		unsigned char* buf = (unsigned char*) malloc(960*2);
@@ -53,4 +53,7 @@ bool AudioInputPHP::writeFrames(const char* data){
 	if (!running) {
 		return false;
 	}*/
+}
+
+void AudioInputModule::EnumerateDevices(std::vector<AudioInputDevice>& devs) {
 }

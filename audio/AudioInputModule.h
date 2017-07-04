@@ -4,31 +4,36 @@
 // you should have received with this source code distribution.
 //
 
-#ifndef LIBTGVOIP_AUDIOOUTPUTPHP_H
-#define LIBTGVOIP_AUDIOOUTPUTPHP_H
+#ifndef LIBTGVOIP_AUDIOINPUTPHP_H
+#define LIBTGVOIP_AUDIOINPUTPHP_H
 
-#include "../libtgvoip/audio/AudioOutput.h"
+#include "../libtgvoip/audio/AudioInput.h"
+#include "../libtgvoip/threading.h"
 #include "../main.h"
 #include "../libtgvoip/VoIPController.h"
 
+
+using namespace tgvoip;
+using namespace tgvoip::audio;
+
 namespace tgvoip{ namespace audio{
-class AudioOutputPHP : public AudioOutput{
+class AudioInputModule : public AudioInput{
 
 public:
+	AudioInputModule(std::string deviceID, void* controller);
+	virtual ~AudioInputModule();
 
-	AudioOutputPHP(void* controller);
-	virtual ~AudioOutputPHP();
 	virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
 	virtual void Start();
 	virtual void Stop();
-	virtual bool IsPlaying() override;
-	virtual float GetLevel() override;
-	unsigned char* readFrames();
+	bool writeFrames(const char* data);
+	static void EnumerateDevices(std::vector<AudioInputDevice>& devs);
 
 private:
+	
 	VoIP* wrapper;
 	bool running;
 };
 }}
 
-#endif //LIBTGVOIP_AUDIOOUTPUTPHP_H
+#endif //LIBTGVOIP_AUDIOINPUTPHP_H

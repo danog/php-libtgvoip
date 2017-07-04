@@ -18,8 +18,8 @@ If not, see <http://www.gnu.org/licenses/>.
 
 #include "libtgvoip/VoIPServerConfig.h"
 
-#include "audio/AudioInputPHP.h"
-#include "audio/AudioOutputPHP.h"
+#include "audio/AudioInputModule.h"
+#include "audio/AudioOutputModule.h"
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
@@ -100,13 +100,13 @@ void VoIP::release()
 
 Php::Value VoIP::writeFrames(Php::Parameters &params)
 {
-    AudioInputPHP *in = (AudioInputPHP *)(intptr_t)inst;
+    AudioInputModule *in = (AudioInputModule *)(intptr_t)inst;
     return in->writeFrames(params[0]);
 }
 
 Php::Value VoIP::readFrames()
 {
-    AudioOutputPHP *out = (AudioOutputPHP *)(intptr_t)inst;
+    AudioOutputModule *out = (AudioOutputModule *)(intptr_t)inst;
     return out->readFrames();
 }
 
