@@ -41,10 +41,10 @@ void AudioInputPHP::Stop(){
 bool AudioInputPHP::writeFrames(const char* data){
 	if (running) {
 		LOGE("STARTED");
-		unsigned char buf[960*2];
+		unsigned char* buf = (unsigned char*) malloc(960*2);
 		memcpy(buf, data, 960*2);
 		InvokeCallback(buf, (size_t)960*2);
-		delete buf;
+		free(buf);
 		return true;
 	} else {
 		LOGE("NOT STARTED");

@@ -63,7 +63,7 @@ public:
 
     Php::Value getDebugLog();
     
-    void updateConnectionState(VoIPController* cntrlr, int state);
+    void updateConnectionState(int state);
 
     void startInput();
     void startOutput();
@@ -99,7 +99,7 @@ public:
 
 private:
     VoIPController* inst;
-
+    Php::Object PHPthis;
 };
 
 #endif

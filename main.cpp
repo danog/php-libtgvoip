@@ -26,27 +26,35 @@ using namespace tgvoip::audio;
 
 void VoIP::__construct(Php::Parameters &params)
 {
+    PHPthis = (Php::Object)this;
+    PHPthis.call("debug", "init started");
+
     madeline = params[1];
     current_call = params[2];
 
     inst = new VoIPController();
+
     inst->implData = static_cast<void *>(this);
     inst->SetStateCallback([](tgvoip::VoIPController *controller, int state) {
-        static_cast<VoIP *>(controller->implData)->updateConnectionState(controller, state);
+        static_cast<VoIP *>(controller->implData)->updateConnectionState(state);
     });
+    PHPthis.call("debug", "init done");
 }
 
 void VoIP::start()
 {
+    PHPthis.call("debug", "start");
     inst->Start();
 }
 
 void VoIP::connect()
 {
+    PHPthis.call("debug", "connect");
     inst->Connect();
 }
 void VoIP::setEncryptionKey(Php::Parameters &params)
 {
+    PHPthis.call("debug", "set key");
 
     char *key = (char *)malloc(256);
     memcpy(key, params[0], 256);
@@ -56,13 +64,10 @@ void VoIP::setEncryptionKey(Php::Parameters &params)
 
 void VoIP::setRemoteEndpoints(Php::Parameters &params)
 {
+    PHPthis.call("debug", "set endpoints");
 
-    size_t len = (size_t)params[0].size();
-    //voip_endpoint_t* eps=(voip_endpoint_t *) malloc(sizeof(voip_endpoint_t)*len);
     std::vector<Endpoint> eps;
-    uint i;
-
-    for (i = 0; i < len; i++)
+    for (int i = 0; i < params[0].size(); i++)
     {
         std::string ip = params[0][i]["ip"];
         std::string ipv6 = params[0][i]["ipv6"];
@@ -70,7 +75,7 @@ void VoIP::setRemoteEndpoints(Php::Parameters &params)
 
         tgvoip::IPv4Address v4addr(ip);
         tgvoip::IPv6Address v6addr("::0");
-        unsigned char pTag[16];
+        unsigned char *pTag = (unsigned char*) malloc(16);
 
         if (ipv6 != "")
         {
@@ -83,6 +88,7 @@ void VoIP::setRemoteEndpoints(Php::Parameters &params)
         }
 
         eps.push_back(Endpoint(params[0][i]["id"], (int32_t)params[0][i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
+        free(pTag);
     }
     inst->SetRemoteEndpoints(eps, params[1]);
 }
@@ -113,6 +119,7 @@ Php::Value VoIP::getDebugString()
 
 void VoIP::setNetworkType(Php::Parameters &params)
 {
+    PHPthis.call("debug", "set network");
     inst->SetNetworkType(params[0]);
 }
 
@@ -123,6 +130,8 @@ void VoIP::setMicMute(Php::Parameters &params)
 // jdouble recvTimeout, jdouble initTimeout, jint dataSavingMode, jboolean enableAEC, jboolean enableNS, jboolean enableAGC, jstring logFilePath
 void VoIP::setConfig(Php::Parameters &params)
 {
+    PHPthis.call("debug", "set config");
+
     voip_config_t cfg;
     cfg.recv_timeout = params[0];
     cfg.init_timeout = params[1];
@@ -190,6 +199,7 @@ Php::Value VoIP::getStats()
 
 void VoIP::setSharedConfig(Php::Parameters &params)
 {
+    PHPthis.call("debug", "set shared config");
     ServerConfig::GetSharedInstance()->Update(params[0]);
 }
 
@@ -198,31 +208,38 @@ Php::Value VoIP::getDebugLog()
     return inst->GetDebugLog();
 }
 
-void VoIP::updateConnectionState(VoIPController *cntrlr, int state)
+void VoIP::updateConnectionState(int state)
 {
-    Php::Object a = this;
-    a.call("setState", state);
+    PHPthis.call("debug", "state");
+    PHPthis.call("debug", "state");
+    PHPthis.call("debug", "state");
+    PHPthis.call("debug", "state");
+    PHPthis.call("debug", "state");
+
+    PHPthis.call("setState", state);
     //setStateMethod(state);
 }
 
 void VoIP::startInput()
 {
-    ((Php::Object)this).call("startInput");
+    PHPthis.call("debug", "start input");
+    PHPthis.call("startInput");
 }
 
 void VoIP::startOutput()
 {
-    ((Php::Object)this).call("startOutput");
+    PHPthis.call("debug", "start output");
+    PHPthis.call("startOutput");
 
 }
 
 void VoIP::stopInput()
 {
-    ((Php::Object)this).call("stopInput");
+    PHPthis.call("stopInput");
 }
 void VoIP::stopOutput()
 {
-    ((Php::Object)this).call("startInput");
+    PHPthis.call("startInput");
 }
 
 
@@ -233,6 +250,7 @@ void VoIP::configureAudioInput(uint32_t sampleRate, uint32_t bitsPerSample, uint
     inputSamplePeriod = 1/sampleRate*1000000;
     inputWritePeriod = 1/sampleRate*960*1000000;
     configuredInput = true;
+    PHPthis.call("debug", "configure input");
 }
 void VoIP::configureAudioOutput(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
     outputSampleRate = sampleRate;
@@ -241,9 +259,10 @@ void VoIP::configureAudioOutput(uint32_t sampleRate, uint32_t bitsPerSample, uin
     outputSamplePeriod = 1/sampleRate;
     outputWritePeriod = 1/sampleRate*960*1000000;
     configuredOutput = true;
+    PHPthis.call("debug", "configure output");
 }
 float VoIP::getOutputLevel() {
-    return (double)((Php::Object)this).call("getOutputLevel");
+    return (double)PHPthis.call("getOutputLevel");
 }
 
 Php::Value VoIP::getCallConfig() {
