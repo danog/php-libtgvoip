@@ -38,13 +38,10 @@ void AudioInputModule::Stop(){
 	wrapper->stopInput();
 	running = false;
 }
-bool AudioInputModule::writeFrames(const char* data){
+bool AudioInputModule::writeFrames(unsigned char* data){
 	if (running) {
 		LOGE("STARTED");
-		unsigned char* buf = (unsigned char*) malloc(960*2);
-		memcpy(buf, data, 960*2);
-		InvokeCallback(buf, (size_t)960*2);
-		free(buf);
+		InvokeCallback(data, (size_t)960*2);
 		return true;
 	} else {
 		LOGE("NOT STARTED");

@@ -23,6 +23,8 @@ public:
 
     void __construct(Php::Parameters &params);
 
+    void __destruct();
+
     void start();
 
     void connect();

@@ -23,14 +23,14 @@ If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
+using namespace std;
 
 void VoIP::__construct(Php::Parameters &params)
 {
     PHPthis = (Php::Object)this;
-    PHPthis.call("debug", "init started");
 
-    madeline = params[1];
-    current_call = params[2];
+    madeline = params[0];
+    current_call = params[1];
 
     inst = new VoIPController();
 
@@ -38,24 +38,19 @@ void VoIP::__construct(Php::Parameters &params)
     inst->SetStateCallback([](tgvoip::VoIPController *controller, int state) {
         static_cast<VoIP *>(controller->implData)->updateConnectionState(state);
     });
-    PHPthis.call("debug", "init done");
 }
 
 void VoIP::start()
 {
-    PHPthis.call("debug", "start");
     inst->Start();
 }
 
 void VoIP::connect()
 {
-    PHPthis.call("debug", "connect");
     inst->Connect();
 }
 void VoIP::setEncryptionKey(Php::Parameters &params)
 {
-    PHPthis.call("debug", "set key");
-
     char *key = (char *)malloc(256);
     memcpy(key, params[0], 256);
     inst->SetEncryptionKey(key, (bool)params[1]);
@@ -64,14 +59,12 @@ void VoIP::setEncryptionKey(Php::Parameters &params)
 
 void VoIP::setRemoteEndpoints(Php::Parameters &params)
 {
-    PHPthis.call("debug", "set endpoints");
-
     std::vector<Endpoint> eps;
     for (int i = 0; i < params[0].size(); i++)
     {
-        std::string ip = params[0][i]["ip"];
-        std::string ipv6 = params[0][i]["ipv6"];
-        std::string peer_tag = params[0][i]["peer_tag"];
+        string ip = params[0][i]["ip"];
+        string ipv6 = params[0][i]["ipv6"];
+        string peer_tag = params[0][i]["peer_tag"];
 
         tgvoip::IPv4Address v4addr(ip);
         tgvoip::IPv6Address v6addr("::0");
@@ -98,15 +91,24 @@ void VoIP::release()
     delete inst;
 }
 
+void VoIP::__destruct()
+{
+    this->release();
+}
+
 Php::Value VoIP::writeFrames(Php::Parameters &params)
 {
     AudioInputModule *in = (AudioInputModule *)(intptr_t)inst;
-    return in->writeFrames(params[0]);
+    unsigned char* data = (unsigned char*) malloc(960*2);
+	memcpy(data, params[0], 960*2);
+    bool res = in->writeFrames(data);
+    free(data);
+    return res;
 }
 
 Php::Value VoIP::readFrames()
 {
-    AudioOutputModule *out = (AudioOutputModule *)(intptr_t)inst;
+    AudioOutputModule *out = (AudioOutputModule *)(intptr_t) inst;
     return out->readFrames();
 }
 
@@ -119,7 +121,6 @@ Php::Value VoIP::getDebugString()
 
 void VoIP::setNetworkType(Php::Parameters &params)
 {
-    PHPthis.call("debug", "set network");
     inst->SetNetworkType(params[0]);
 }
 
@@ -130,8 +131,6 @@ void VoIP::setMicMute(Php::Parameters &params)
 // jdouble recvTimeout, jdouble initTimeout, jint dataSavingMode, jboolean enableAEC, jboolean enableNS, jboolean enableAGC, jstring logFilePath
 void VoIP::setConfig(Php::Parameters &params)
 {
-    PHPthis.call("debug", "set config");
-
     voip_config_t cfg;
     cfg.recv_timeout = params[0];
     cfg.init_timeout = params[1];
@@ -160,7 +159,7 @@ void VoIP::setConfig(Php::Parameters &params)
     }
     inst->SetConfig(&cfg);
 }
-// int protocol, std::string address, uint16_t port, std::string username, std::string password
+// int protocol, string address, uint16_t port, string username, string password
 void VoIP::setProxy(Php::Parameters &params)
 {
     inst->SetProxy(params[0], params[1], (int32_t) params[2], params[3], params[4]);
@@ -199,7 +198,6 @@ Php::Value VoIP::getStats()
 
 void VoIP::setSharedConfig(Php::Parameters &params)
 {
-    PHPthis.call("debug", "set shared config");
     ServerConfig::GetSharedInstance()->Update(params[0]);
 }
 
@@ -210,25 +208,17 @@ Php::Value VoIP::getDebugLog()
 
 void VoIP::updateConnectionState(int state)
 {
-    PHPthis.call("debug", "state");
-    PHPthis.call("debug", "state");
-    PHPthis.call("debug", "state");
-    PHPthis.call("debug", "state");
-    PHPthis.call("debug", "state");
-
     PHPthis.call("setState", state);
     //setStateMethod(state);
 }
 
 void VoIP::startInput()
 {
-    PHPthis.call("debug", "start input");
     PHPthis.call("startInput");
 }
 
 void VoIP::startOutput()
 {
-    PHPthis.call("debug", "start output");
     PHPthis.call("startOutput");
 
 }
@@ -250,7 +240,6 @@ void VoIP::configureAudioInput(uint32_t sampleRate, uint32_t bitsPerSample, uint
     inputSamplePeriod = 1/sampleRate*1000000;
     inputWritePeriod = 1/sampleRate*960*1000000;
     configuredInput = true;
-    PHPthis.call("debug", "configure input");
 }
 void VoIP::configureAudioOutput(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
     outputSampleRate = sampleRate;
@@ -259,7 +248,6 @@ void VoIP::configureAudioOutput(uint32_t sampleRate, uint32_t bitsPerSample, uin
     outputSamplePeriod = 1/sampleRate;
     outputWritePeriod = 1/sampleRate*960*1000000;
     configuredOutput = true;
-    PHPthis.call("debug", "configure output");
 }
 float VoIP::getOutputLevel() {
     return (double)PHPthis.call("getOutputLevel");
@@ -302,6 +290,7 @@ PHPCPP_EXPORT void *get_module()
     // description of the class so that PHP knows which methods are accessible
     Php::Class<VoIP> voip("VoIP");
 
+    /*
     voip.method("setState", {
         Php::ByVal("state", Php::Type::Numeric),
     });
@@ -310,8 +299,10 @@ PHPCPP_EXPORT void *get_module()
     voip.method("stopOutput");
     voip.method("stopInput");
     voip.method("getOutputLevel");
+    */
 
     voip.method<&VoIP::getCallConfig>("getCallConfig");
+    voip.method<&VoIP::__destruct>("__destruct", Php::Public | Php::Final);
     voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final, {
         Php::ByRef("madelineProto", Php::Type::Object), Php::ByVal("currentCall", Php::Type::Numeric),
     });
@@ -332,7 +323,7 @@ PHPCPP_EXPORT void *get_module()
         Php::ByVal("recvTimeout", Php::Type::Float), Php::ByVal("initTimeout", Php::Type::Float), Php::ByVal("dataSavingMode", Php::Type::Bool), Php::ByVal("enableAEC", Php::Type::Bool), Php::ByVal("enableNS", Php::Type::Bool), Php::ByVal("enableAGC", Php::Type::Bool), Php::ByVal("logFilePath", Php::Type::String, false), Php::ByVal("statsDumpFilePath", Php::Type::String, false),
     });
     voip.method<&VoIP::setProxy>("setProxy", Php::Public | Php::Final, {
-        // int protocol, std::string address, uint16_t port, std::string username, std::string password
+        // int protocol, string address, uint16_t port, string username, string password
         Php::ByVal("protocol", Php::Type::Numeric), Php::ByVal("address", Php::Type::String), Php::ByVal("port", Php::Type::Numeric), Php::ByVal("username", Php::Type::String), Php::ByVal("password", Php::Type::String),
     });
     voip.method<&VoIP::setSharedConfig>("setSharedConfig", Php::Public | Php::Final, {Php::ByVal("config", Php::Type::Array)});

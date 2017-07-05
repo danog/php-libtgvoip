@@ -26,7 +26,7 @@ public:
 	virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
 	virtual void Start();
 	virtual void Stop();
-	bool writeFrames(const char* data);
+	bool writeFrames(unsigned char* data);
 	static void EnumerateDevices(std::vector<AudioInputDevice>& devs);
 
 private:
