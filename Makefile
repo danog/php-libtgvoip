@@ -10,12 +10,12 @@
 include $(CLEAR_VARS)
 
 DEFINES			=	-DLIBTGVOIP_CUSTOM -DWEBRTC_POSIX -DTGVOIP_USE_DESKTOP_DSP -DWEBRTC_APM_DEBUG_DUMP=0
-INCLUDES		=	-Ilibtgvoip -I/usr/include/opus -I/usr/local/ssl/include/ -Ilibtgvoip/webrtc_dsp
-LDINCLUDES		=	-L/usr/local/ssl/lib
+INCLUDES		=	-Ilibtgvoip -I/usr/include/opus -I/usr/local/ssl/include/ -Ilibtgvoip/webrtc_dsp -pthread $(shell php-config --includes)
+LDINCLUDES		=	-L/usr/local/ssl/lib $(shell php-config --ldflags)
 CXXFLAGS		=	${INCLUDES} -O0 -Wall -c -std=c++11 -fpic -finline-functions -ffast-math -fno-strict-aliasing -DUSE_KISS_FFT -DFIXED_POINT -DPHP_LIBTGVOIP -DWEBRTC_POSIX -DTGVOIP_USE_DESKTOP_DSP -DWEBRTC_APM_DEBUG_DUMP=0 -g -DTGVOIP_USE_CXX11_LIB -DTGVOIP_OTHER ${DEFINES} -o
 CFLAGS			=	${INCLUDES} -O0 -DUSE_KISS_FFT -fexceptions -fpic ${DEFINES} -g
 
-LFLAGS		=	-shared ${LDINCLUDES} -pthread -lphpcpp -lopus -lpthread -lstdc++ -lcrypto -lssl -lm -Wl,-z,defs
+LFLAGS		=	-shared ${LDINCLUDES} -lphpcpp -lopus -lpthread -lstdc++ -lcrypto -lssl -pthread $(shell php-config --libs)
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
     CXXFLAGS += -mfloat-abi=softfp -mfpu=neon

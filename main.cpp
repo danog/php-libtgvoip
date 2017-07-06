@@ -2,7 +2,7 @@
 Copyright 2016-2017 Daniil Gentili
 (https://daniil.it)
 This file is part of php-libtgvoip.
-php-libtgvoip is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+php-libtgvoip is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the free Software Foundation, either version 3 of the License, or (at your option) any later version.
 The PWRTelegram API is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the GNU Affero General Public License for more details.
 You should have received a copy of the GNU General Public License along with php-libtgvoip.
@@ -17,27 +17,38 @@ If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 #include "libtgvoip/VoIPServerConfig.h"
+#include "libtgvoip/threading.h"
+#include "libtgvoip/logging.h"
 
 #include "audio/AudioInputModule.h"
 #include "audio/AudioOutputModule.h"
-
 using namespace tgvoip;
 using namespace tgvoip::audio;
 using namespace std;
 
-void VoIP::__construct(Php::Parameters &params)
+extern "C" {
+    void* test(void* wrapper){
+        emalloc(sizeof(Php::Value));
+	    return NULL;
+    }
+}
+
+void VoIP::__construct()
 {
-    PHPthis = (Php::Object)this;
-
+	pthread_t a;    
+	pthread_create(&a, NULL, test, this);
+    //PHPthis = (Php::Object)this;
+    /*
     madeline = params[0];
-    current_call = params[1];
-
+    current_call = params[1];*/
+    /*
     inst = new VoIPController();
 
-    inst->implData = static_cast<void *>(this);
+    inst->implData = (void *)this;
     inst->SetStateCallback([](tgvoip::VoIPController *controller, int state) {
-        static_cast<VoIP *>(controller->implData)->updateConnectionState(state);
+        ((VoIP *)controller->implData)->updateConnectionState(state);
     });
+    */
 }
 
 void VoIP::start()
@@ -51,10 +62,10 @@ void VoIP::connect()
 }
 void VoIP::setEncryptionKey(Php::Parameters &params)
 {
-    char *key = (char *)malloc(256);
+    char *key = (char *)emalloc(256);
     memcpy(key, params[0], 256);
     inst->SetEncryptionKey(key, (bool)params[1]);
-    free(key);
+    efree(key);
 }
 
 void VoIP::setRemoteEndpoints(Php::Parameters &params)
@@ -68,7 +79,7 @@ void VoIP::setRemoteEndpoints(Php::Parameters &params)
 
         tgvoip::IPv4Address v4addr(ip);
         tgvoip::IPv6Address v6addr("::0");
-        unsigned char *pTag = (unsigned char*) malloc(16);
+        unsigned char *pTag = (unsigned char *) emalloc(16);
 
         if (ipv6 != "")
         {
@@ -81,7 +92,7 @@ void VoIP::setRemoteEndpoints(Php::Parameters &params)
         }
 
         eps.push_back(Endpoint(params[0][i]["id"], (int32_t)params[0][i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
-        free(pTag);
+        efree(pTag);
     }
     inst->SetRemoteEndpoints(eps, params[1]);
 }
@@ -99,17 +110,20 @@ void VoIP::__destruct()
 Php::Value VoIP::writeFrames(Php::Parameters &params)
 {
     AudioInputModule *in = (AudioInputModule *)(intptr_t)inst;
-    unsigned char* data = (unsigned char*) malloc(960*2);
+    unsigned char *data = (unsigned char *) emalloc(960*2);
 	memcpy(data, params[0], 960*2);
     bool res = in->writeFrames(data);
-    free(data);
+    efree(data);
     return res;
 }
 
 Php::Value VoIP::readFrames()
 {
     AudioOutputModule *out = (AudioOutputModule *)(intptr_t) inst;
-    return out->readFrames();
+    const char *frames = (const char *) out->readFrames();
+    Php::Value returnframes = frames;
+    efree((void *) frames);
+    return returnframes;
 }
 
 Php::Value VoIP::getDebugString()
@@ -208,28 +222,29 @@ Php::Value VoIP::getDebugLog()
 
 void VoIP::updateConnectionState(int state)
 {
-    PHPthis.call("setState", state);
+    Php::Value a = "a";
+    delete a;
     //setStateMethod(state);
 }
 
 void VoIP::startInput()
 {
-    PHPthis.call("startInput");
+    //PHPthis.call("startInput");
 }
 
 void VoIP::startOutput()
 {
-    PHPthis.call("startOutput");
+    //PHPthis.call("startOutput");
 
 }
 
 void VoIP::stopInput()
 {
-    PHPthis.call("stopInput");
+    //PHPthis.call("stopInput");
 }
 void VoIP::stopOutput()
 {
-    PHPthis.call("startInput");
+    //PHPthis.call("startInput");
 }
 
 
@@ -250,7 +265,8 @@ void VoIP::configureAudioOutput(uint32_t sampleRate, uint32_t bitsPerSample, uin
     configuredOutput = true;
 }
 float VoIP::getOutputLevel() {
-    return (double)PHPthis.call("getOutputLevel");
+    //return (double)PHPthis.call("getOutputLevel");
+    return 0.0;
 }
 
 Php::Value VoIP::getCallConfig() {
@@ -303,9 +319,7 @@ PHPCPP_EXPORT void *get_module()
 
     voip.method<&VoIP::getCallConfig>("getCallConfig");
     voip.method<&VoIP::__destruct>("__destruct", Php::Public | Php::Final);
-    voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final, {
-        Php::ByRef("madelineProto", Php::Type::Object), Php::ByVal("currentCall", Php::Type::Numeric),
-    });
+    voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final);
     voip.method<&VoIP::setEncryptionKey>("setEncryptionKey", Php::Public | Php::Final, {
         Php::ByVal("key", Php::Type::String), Php::ByVal("isOutgoing", Php::Type::Bool),
     });

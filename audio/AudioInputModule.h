@@ -20,18 +20,18 @@ namespace tgvoip{ namespace audio{
 class AudioInputModule : public AudioInput{
 
 public:
-	AudioInputModule(std::string deviceID, void* controller);
+	AudioInputModule(std::string deviceID, void *controller);
 	virtual ~AudioInputModule();
 
 	virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
 	virtual void Start();
 	virtual void Stop();
-	bool writeFrames(unsigned char* data);
+	bool writeFrames(unsigned char *data);
 	static void EnumerateDevices(std::vector<AudioInputDevice>& devs);
 
 private:
 	
-	VoIP* wrapper;
+	VoIP *wrapper;
 	bool running;
 };
 }}

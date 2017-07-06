@@ -12,6 +12,10 @@ If not, see <http://www.gnu.org/licenses/>.
 #define PHPLIBTGVOIP_H
 
 #include "libtgvoip/VoIPController.h"
+
+#include <php.h>
+#include <php_ini.h>
+#include <ext/standard/info.h>
 #include <phpcpp.h>
 
 
@@ -21,7 +25,7 @@ using namespace tgvoip::audio;
 class VoIP : public Php::Base {
 public:
 
-    void __construct(Php::Parameters &params);
+    void __construct();
 
     void __destruct();
 
@@ -80,9 +84,10 @@ public:
 
     Php::Value getCallConfig();
 
-
+    /*
     Php::Value madeline;
     Php::Value current_call;
+    */
     int inputBitsPerSample;
     int outputBitsPerSample;
     int inputSampleRate;
@@ -100,8 +105,7 @@ public:
     bool configuredOutput = false;
 
 private:
-    VoIPController* inst;
-    Php::Object PHPthis;
+    VoIPController *inst;
 };
 
 #endif

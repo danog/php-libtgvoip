@@ -13,7 +13,7 @@ using namespace tgvoip;
 using namespace tgvoip::audio;
 
 
-AudioInputModule::AudioInputModule(std::string deviceID, void* controller){
+AudioInputModule::AudioInputModule(std::string deviceID, void *controller){
 	wrapper = (VoIP *)((VoIPController *)controller)->implData;
 }
 
@@ -38,7 +38,7 @@ void AudioInputModule::Stop(){
 	wrapper->stopInput();
 	running = false;
 }
-bool AudioInputModule::writeFrames(unsigned char* data){
+bool AudioInputModule::writeFrames(unsigned char *data){
 	if (running) {
 		LOGE("STARTED");
 		InvokeCallback(data, (size_t)960*2);

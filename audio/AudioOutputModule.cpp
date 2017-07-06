@@ -12,7 +12,7 @@
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-AudioOutputModule::AudioOutputModule(std::string deviceID, void* controller){
+AudioOutputModule::AudioOutputModule(std::string deviceID, void *controller){
 	wrapper = (VoIP *)((VoIPController *)controller)->implData;
 }
 AudioOutputModule::~AudioOutputModule(){
@@ -45,8 +45,8 @@ float AudioOutputModule::GetLevel(){
 	return wrapper->getOutputLevel();
 }
 
-unsigned char* AudioOutputModule::readFrames() {
-	unsigned char* buf = (unsigned char *) malloc(960*2);
+unsigned char * AudioOutputModule::readFrames() {
+	unsigned char *buf = (unsigned char *) emalloc(960*2);
 	InvokeCallback(buf, 960*2);
 	return buf;
 }
