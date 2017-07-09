@@ -4,7 +4,6 @@
 // you should have received with this source code distribution.
 //
 
-
 #include "AudioInputModule.h"
 #include <stdio.h>
 #include "../libtgvoip/logging.h"
@@ -12,45 +11,57 @@
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-
-AudioInputModule::AudioInputModule(std::string deviceID, void *controller){
+AudioInputModule::AudioInputModule(std::string deviceID, void *controller)
+{
 	wrapper = (VoIP *)((VoIPController *)controller)->implData;
+	wrapper->inputCreated = true;
 }
 
-
-AudioInputModule::~AudioInputModule(){
-
+AudioInputModule::~AudioInputModule()
+{
+	wrapper->inputConfigured = false;
+	wrapper->inputCreated = false;
 }
 
+void AudioInputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels)
+{
+	wrapper->inputSampleNumber = 960;
+	wrapper->inputSampleRate = sampleRate;
+	wrapper->inputBitsPerSample = bitsPerSample;
+	wrapper->inputChannels = channels;
+	wrapper->inputSamplePeriod = 1 / sampleRate * 1000000;
+	wrapper->inputWritePeriod = 1 / sampleRate * wrapper->inputSampleNumber * 1000000;
+	wrapper->inputSampleSize = wrapper->inputSampleNumber * wrapper->inputChannels * wrapper->inputBitsPerSample / 8;
 
-void AudioInputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
-	wrapper->configureAudioInput(sampleRate, bitsPerSample, channels);
+	wrapper->inputConfigured = true;
 }
 
-void AudioInputModule::Start(){
-	if(running)
+void AudioInputModule::Start()
+{
+	if (wrapper->inputRunning)
 		return;
-	running = true;
-	wrapper->startInput();
+	wrapper->inputRunning = true;
 }
 
-void AudioInputModule::Stop(){
-	wrapper->stopInput();
-	running = false;
+void AudioInputModule::Stop()
+{
+	wrapper->inputRunning = false;
 }
-bool AudioInputModule::writeFrames(unsigned char *data){
-	if (running) {
+bool AudioInputModule::writeSamples(unsigned char *data)
+{
+	if (wrapper->inputRunning)
+	{
 		LOGE("STARTED");
-		InvokeCallback(data, (size_t)960*2);
+		InvokeCallback(data, wrapper->inputSampleSize);
 		return true;
-	} else {
+	}
+	else
+	{
 		LOGE("NOT STARTED");
 		return false;
-	}/*
-	if (!running) {
-		return false;
-	}*/
+	}
 }
 
-void AudioInputModule::EnumerateDevices(std::vector<AudioInputDevice>& devs) {
+void AudioInputModule::EnumerateDevices(std::vector<AudioInputDevice> &devs)
+{
 }

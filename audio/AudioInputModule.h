@@ -26,13 +26,11 @@ public:
 	virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
 	virtual void Start();
 	virtual void Stop();
-	bool writeFrames(unsigned char *data);
+	bool writeSamples(unsigned char *data);
 	static void EnumerateDevices(std::vector<AudioInputDevice>& devs);
 
 private:
-	
 	VoIP *wrapper;
-	bool running;
 };
 }}
 

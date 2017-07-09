@@ -18,7 +18,6 @@ If not, see <http://www.gnu.org/licenses/>.
 #include <ext/standard/info.h>
 #include <phpcpp.h>
 
-
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
@@ -41,9 +40,9 @@ public:
     void release();
     
     
-    Php::Value writeFrames(Php::Parameters &params);
+    Php::Value writeSamples(Php::Parameters &params);
 
-    Php::Value readFrames();
+    Php::Value readSamples();
     
     Php::Value getDebugString();
 
@@ -71,39 +70,41 @@ public:
     
     void updateConnectionState(int state);
 
-    void startInput();
-    void startOutput();
-
-    void stopInput();
-    void stopOutput();
-
-    void configureAudioInput(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
-    void configureAudioOutput(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
-
-    float getOutputLevel();
-
-    Php::Value getCallConfig();
+    void setOutputLevel(Php::Parameters &params);
 
     /*
     Php::Value madeline;
     Php::Value current_call;
     */
+    
     int inputBitsPerSample;
-    int outputBitsPerSample;
     int inputSampleRate;
-    int outputSampleRate;
     int inputChannels;
-    int outputChannels;
-
     int inputSamplePeriod;
-    int outputSamplePeriod;
-
     int inputWritePeriod;
+	int inputSampleNumber;
+	int inputSampleSize;
+
+    bool inputCreated = false;
+    bool inputConfigured = false;
+    bool inputRunning = false;
+
+
+    int outputBitsPerSample;
+    int outputSampleRate;
+    int outputChannels;
+    int outputSamplePeriod;
     int outputWritePeriod;
+	int outputSampleNumber;
+	int outputSampleSize;
 
-    bool configuredInput = false;
-    bool configuredOutput = false;
+    bool outputCreated = false;
+    bool outputConfigured = false;
+    bool outputRunning = false;
 
+    float outputLevel = 0.0;
+
+    int state;
 private:
     VoIPController *inst;
 };

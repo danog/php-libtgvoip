@@ -23,12 +23,11 @@ public:
 	virtual void Stop();
 	virtual bool IsPlaying() override;
 	virtual float GetLevel() override;
-	unsigned char * readFrames();
+	unsigned char * readSamples();
 	static void EnumerateDevices(std::vector<AudioOutputDevice>& devs);
 
 private:
 	VoIP *wrapper;
-	bool running;
 };
 }}
 

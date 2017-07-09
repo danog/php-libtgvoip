@@ -26,29 +26,20 @@ using namespace tgvoip;
 using namespace tgvoip::audio;
 using namespace std;
 
-extern "C" {
-    void* test(void* wrapper){
-        emalloc(sizeof(Php::Value));
-	    return NULL;
-    }
-}
-
 void VoIP::__construct()
 {
-	pthread_t a;    
-	pthread_create(&a, NULL, test, this);
-    //PHPthis = (Php::Object)this;
-    /*
+/*
+    PHPthis = (Php::Object)this;
     madeline = params[0];
     current_call = params[1];*/
-    /*
+
     inst = new VoIPController();
 
-    inst->implData = (void *)this;
+    inst->implData = (void *) this;
     inst->SetStateCallback([](tgvoip::VoIPController *controller, int state) {
-        ((VoIP *)controller->implData)->updateConnectionState(state);
+        ((VoIP *)controller->implData)->state = state;
     });
-    */
+    
 }
 
 void VoIP::start()
@@ -62,7 +53,7 @@ void VoIP::connect()
 }
 void VoIP::setEncryptionKey(Php::Parameters &params)
 {
-    char *key = (char *)emalloc(256);
+    char *key = (char *) emalloc(256);
     memcpy(key, params[0], 256);
     inst->SetEncryptionKey(key, (bool)params[1]);
     efree(key);
@@ -97,40 +88,35 @@ void VoIP::setRemoteEndpoints(Php::Parameters &params)
     inst->SetRemoteEndpoints(eps, params[1]);
 }
 
-void VoIP::release()
+void VoIP::__destruct()
 {
     delete inst;
 }
 
-void VoIP::__destruct()
+Php::Value VoIP::writeSamples(Php::Parameters &params)
 {
-    this->release();
-}
-
-Php::Value VoIP::writeFrames(Php::Parameters &params)
-{
-    AudioInputModule *in = (AudioInputModule *)(intptr_t)inst;
     unsigned char *data = (unsigned char *) emalloc(960*2);
 	memcpy(data, params[0], 960*2);
-    bool res = in->writeFrames(data);
+    bool res = ((AudioInputModule *)(intptr_t)inst)->writeSamples(data);
     efree(data);
     return res;
 }
 
-Php::Value VoIP::readFrames()
+Php::Value VoIP::readSamples()
 {
-    AudioOutputModule *out = (AudioOutputModule *)(intptr_t) inst;
-    const char *frames = (const char *) out->readFrames();
-    Php::Value returnframes = frames;
-    efree((void *) frames);
-    return returnframes;
+    const char *samples = (const char *) ((AudioOutputModule *)(intptr_t) inst)->readSamples();
+    Php::Value returnsamples = samples;
+    efree((void *) samples);
+    return returnsamples;
 }
 
 Php::Value VoIP::getDebugString()
 {
-    char buf[10240];
+    char *buf = (char *) emalloc(10240);
     inst->GetDebugString(buf, 10240);
-    return buf;
+    Php::Value returnvalue = buf;
+    efree(buf);
+    return returnvalue;
 }
 
 void VoIP::setNetworkType(Php::Parameters &params)
@@ -202,7 +188,7 @@ Php::Value VoIP::getStats()
 {
     voip_stats_t _stats;
     inst->GetStats(&_stats);
-    Php::Array stats;
+    Php::Value stats;
     stats["bytesSentWifi"] = (int64_t)_stats.bytesSentWifi;
     stats["bytesSentMobile"] = (int64_t)_stats.bytesSentMobile;
     stats["bytesRecvdWifi"] = (int64_t)_stats.bytesRecvdWifi;
@@ -220,74 +206,10 @@ Php::Value VoIP::getDebugLog()
     return inst->GetDebugLog();
 }
 
-void VoIP::updateConnectionState(int state)
-{
-    Php::Value a = "a";
-    delete a;
-    //setStateMethod(state);
+void VoIP::setOutputLevel(Php::Parameters &params) {
+    outputLevel = (double) params[0];
 }
 
-void VoIP::startInput()
-{
-    //PHPthis.call("startInput");
-}
-
-void VoIP::startOutput()
-{
-    //PHPthis.call("startOutput");
-
-}
-
-void VoIP::stopInput()
-{
-    //PHPthis.call("stopInput");
-}
-void VoIP::stopOutput()
-{
-    //PHPthis.call("startInput");
-}
-
-
-void VoIP::configureAudioInput(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
-    inputSampleRate = sampleRate;
-    inputBitsPerSample = bitsPerSample;
-    inputChannels = channels;
-    inputSamplePeriod = 1/sampleRate*1000000;
-    inputWritePeriod = 1/sampleRate*960*1000000;
-    configuredInput = true;
-}
-void VoIP::configureAudioOutput(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels) {
-    outputSampleRate = sampleRate;
-    outputBitsPerSample = bitsPerSample;
-    outputChannels = channels;
-    outputSamplePeriod = 1/sampleRate;
-    outputWritePeriod = 1/sampleRate*960*1000000;
-    configuredOutput = true;
-}
-float VoIP::getOutputLevel() {
-    //return (double)PHPthis.call("getOutputLevel");
-    return 0.0;
-}
-
-Php::Value VoIP::getCallConfig() {
-    Php::Value result;
-    if (configuredInput) {
-        result["input"]["sampleRate"] = inputSampleRate;
-        result["input"]["bitsPerSample"] = inputBitsPerSample;
-        result["input"]["channels"] = inputChannels;
-        result["input"]["samplePeriod"] = inputSamplePeriod;
-        result["input"]["writePeriod"] = inputWritePeriod;
-    }
-    if (configuredOutput) {
-        result["output"]["sampleRate"] = outputSampleRate;
-        result["output"]["bitsPerSample"] = outputBitsPerSample;
-        result["output"]["channels"] = outputChannels;
-        result["output"]["samplePeriod"] = outputSamplePeriod;
-        result["output"]["writePeriod"] = outputWritePeriod;
-    }
-
-    return result;
-}
 extern "C" {
 
 /**
@@ -317,11 +239,13 @@ PHPCPP_EXPORT void *get_module()
     voip.method("getOutputLevel");
     */
 
-    voip.method<&VoIP::getCallConfig>("getCallConfig");
     voip.method<&VoIP::__destruct>("__destruct", Php::Public | Php::Final);
     voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final);
     voip.method<&VoIP::setEncryptionKey>("setEncryptionKey", Php::Public | Php::Final, {
         Php::ByVal("key", Php::Type::String), Php::ByVal("isOutgoing", Php::Type::Bool),
+    });
+    voip.method<&VoIP::setEncryptionKey>("setOutputLevel", Php::Public | Php::Final, {
+        Php::ByVal("level", Php::Type::Float),
     });
     voip.method<&VoIP::setNetworkType>("setNetworkType", Php::Public | Php::Final, {
         Php::ByVal("type", Php::Type::Numeric),
@@ -348,12 +272,11 @@ PHPCPP_EXPORT void *get_module()
     voip.method<&VoIP::getVersion>("getVersion", Php::Public | Php::Final);
     voip.method<&VoIP::getDebugString>("getDebugString", Php::Public | Php::Final);
     voip.method<&VoIP::getStats>("getStats", Php::Public | Php::Final);
-    voip.method<&VoIP::release>("release", Php::Public | Php::Final);
     voip.method<&VoIP::start>("start", Php::Public | Php::Final);
     voip.method<&VoIP::connect>("connect", Php::Public | Php::Final);
 
-    voip.method<&VoIP::readFrames>("readFrames", Php::Public | Php::Final);
-    voip.method<&VoIP::writeFrames>("writeFrames", Php::Public | Php::Final, {Php::ByVal("frames", Php::Type::String)});
+    voip.method<&VoIP::readSamples>("readSamples", Php::Public | Php::Final);
+    voip.method<&VoIP::writeSamples>("writeSamples", Php::Public | Php::Final, {Php::ByVal("samples", Php::Type::String)});
 
     voip.constant("STATE_WAIT_INIT", STATE_WAIT_INIT);
     voip.constant("STATE_WAIT_INIT_ACK", STATE_WAIT_INIT_ACK);
@@ -385,10 +308,6 @@ PHPCPP_EXPORT void *get_module()
 
     voip.constant("PROXY_NONE", PROXY_NONE);
     voip.constant("PROXY_SOCKS5", PROXY_SOCKS5);
-
-
-    voip.constant("FRAME_NUMBER", 960);
-    voip.constant("FRAME_SIZE", 960*2);
 
     Php::Namespace danog("danog");
     Php::Namespace MadelineProto("MadelineProto");
