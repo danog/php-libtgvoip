@@ -278,6 +278,7 @@ PHPCPP_EXPORT void *get_module()
     voip.method<&VoIP::readSamples>("readSamples", Php::Public | Php::Final);
     voip.method<&VoIP::writeSamples>("writeSamples", Php::Public | Php::Final, {Php::ByVal("samples", Php::Type::String)});
 
+    voip.constant("STATE_CREATED", STATE_CREATED);
     voip.constant("STATE_WAIT_INIT", STATE_WAIT_INIT);
     voip.constant("STATE_WAIT_INIT_ACK", STATE_WAIT_INIT_ACK);
     voip.constant("STATE_ESTABLISHED", STATE_ESTABLISHED);

@@ -104,7 +104,7 @@ public:
 
     float outputLevel = 0.0;
 
-    int state;
+    int state = STATE_CREATED;
 private:
     VoIPController *inst;
 };
