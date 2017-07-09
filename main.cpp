@@ -95,8 +95,8 @@ void VoIP::__destruct()
 
 Php::Value VoIP::writeSamples(Php::Parameters &params)
 {
-    unsigned char *data = (unsigned char *) emalloc(960*2);
-	memcpy(data, params[0], 960*2);
+    unsigned char *data = (unsigned char *) emalloc(inputSampleSize);
+	memcpy(data, params[0], inputSampleSize);
     bool res = ((AudioInputModule *)(intptr_t)inst)->writeSamples(data);
     efree(data);
     return res;
