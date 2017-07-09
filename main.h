@@ -18,12 +18,17 @@ If not, see <http://www.gnu.org/licenses/>.
 #include <ext/standard/info.h>
 #include <phpcpp.h>
 
+#define AUDIO_STATE_NONE -1
+#define AUDIO_STATE_CREATED 0
+#define AUDIO_STATE_CONFIGURED 1
+#define AUDIO_STATE_RUNNING 2
+
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-class VoIP : public Php::Base {
-public:
-
+class VoIP : public Php::Base
+{
+  public:
     void __construct();
 
     void __destruct();
@@ -36,14 +41,12 @@ public:
 
     void setRemoteEndpoints(Php::Parameters &params);
 
-
     void release();
-    
-    
+
     Php::Value writeSamples(Php::Parameters &params);
 
     Php::Value readSamples();
-    
+
     Php::Value getDebugString();
 
     void setNetworkType(Php::Parameters &params);
@@ -67,45 +70,45 @@ public:
     void setProxy(Php::Parameters &params);
 
     Php::Value getDebugLog();
-    
+
     void updateConnectionState(int state);
 
     void setOutputLevel(Php::Parameters &params);
 
+    Php::Value getState();
+
+    Php::Value getOutputState();
+    Php::Value getInputState();
+
+    Php::Value getOutputParams();
+    Php::Value getInputParams();
     /*
     Php::Value madeline;
     Php::Value current_call;
     */
-    
+
     int inputBitsPerSample;
     int inputSampleRate;
     int inputChannels;
     int inputSamplePeriod;
     int inputWritePeriod;
-	int inputSampleNumber;
-	int inputSampleSize;
-
-    bool inputCreated = false;
-    bool inputConfigured = false;
-    bool inputRunning = false;
-
+    int inputSampleNumber;
+    int inputSamplesSize;
+    int inputState = AUDIO_STATE_NONE;
 
     int outputBitsPerSample;
     int outputSampleRate;
     int outputChannels;
     int outputSamplePeriod;
     int outputWritePeriod;
-	int outputSampleNumber;
-	int outputSampleSize;
-
-    bool outputCreated = false;
-    bool outputConfigured = false;
-    bool outputRunning = false;
-
+    int outputSampleNumber;
+    int outputSamplesSize;
     float outputLevel = 0.0;
+    int outputState = AUDIO_STATE_NONE;
 
     int state = STATE_CREATED;
-private:
+
+  private:
     VoIPController *inst;
 };
 

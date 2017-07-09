@@ -14,12 +14,11 @@ using namespace tgvoip::audio;
 AudioOutputModule::AudioOutputModule(std::string deviceID, void *controller)
 {
 	wrapper = (VoIP *)((VoIPController *)controller)->implData;
-	wrapper->outputCreated = true;
+	wrapper->outputState = AUDIO_STATE_CREATED;
 }
 AudioOutputModule::~AudioOutputModule()
 {
-	wrapper->outputCreated = false;
-	wrapper->outputConfigured = false;
+	wrapper->outputState = AUDIO_STATE_NONE;
 }
 
 void AudioOutputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels)
@@ -30,28 +29,28 @@ void AudioOutputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, u
 	wrapper->outputChannels = channels;
 	wrapper->outputSamplePeriod = 1 / sampleRate * 1000000;
 	wrapper->outputWritePeriod = 1 / sampleRate * wrapper->outputSampleNumber * 1000000;
-	wrapper->outputSampleSize = wrapper->outputSampleNumber * wrapper->outputChannels * wrapper->outputBitsPerSample / 8;
+	wrapper->outputSamplesSize = wrapper->outputSampleNumber * wrapper->outputChannels * wrapper->outputBitsPerSample / 8;
 
-	wrapper->outputConfigured = true;
+	wrapper->outputState = AUDIO_STATE_CONFIGURED;
 }
 
 void AudioOutputModule::Start()
 {
-	if (wrapper->outputRunning)
+	if (wrapper->outputState == AUDIO_STATE_RUNNING)
 		return;
-	wrapper->outputRunning = true;
+	wrapper->outputState = AUDIO_STATE_RUNNING;
 }
 
 void AudioOutputModule::Stop()
 {
-	if (!wrapper->outputRunning)
+	if (wrapper->outputState != AUDIO_STATE_RUNNING)
 		return;
-	wrapper->outputRunning = false;
+	wrapper->outputState = AUDIO_STATE_CONFIGURED;
 }
 
 bool AudioOutputModule::IsPlaying()
 {
-	return wrapper->outputRunning;
+	return wrapper->outputState == AUDIO_STATE_RUNNING;
 }
 
 float AudioOutputModule::GetLevel()
@@ -61,8 +60,8 @@ float AudioOutputModule::GetLevel()
 
 unsigned char *AudioOutputModule::readSamples()
 {
-	unsigned char *buf = (unsigned char *)emalloc(wrapper->outputSampleSize);
-	InvokeCallback(buf, wrapper->outputSampleSize);
+	unsigned char *buf = (unsigned char *)emalloc(wrapper->outputSamplesSize);
+	InvokeCallback(buf, wrapper->outputSamplesSize);
 	return buf;
 }
 

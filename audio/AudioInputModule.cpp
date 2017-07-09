@@ -14,13 +14,12 @@ using namespace tgvoip::audio;
 AudioInputModule::AudioInputModule(std::string deviceID, void *controller)
 {
 	wrapper = (VoIP *)((VoIPController *)controller)->implData;
-	wrapper->inputCreated = true;
+	wrapper->inputState = AUDIO_STATE_CREATED;
 }
 
 AudioInputModule::~AudioInputModule()
 {
-	wrapper->inputConfigured = false;
-	wrapper->inputCreated = false;
+	wrapper->inputState = AUDIO_STATE_NONE;
 }
 
 void AudioInputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels)
@@ -31,28 +30,30 @@ void AudioInputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, ui
 	wrapper->inputChannels = channels;
 	wrapper->inputSamplePeriod = 1 / sampleRate * 1000000;
 	wrapper->inputWritePeriod = 1 / sampleRate * wrapper->inputSampleNumber * 1000000;
-	wrapper->inputSampleSize = wrapper->inputSampleNumber * wrapper->inputChannels * wrapper->inputBitsPerSample / 8;
+	wrapper->inputSamplesSize = wrapper->inputSampleNumber * wrapper->inputChannels * wrapper->inputBitsPerSample / 8;
 
-	wrapper->inputConfigured = true;
+	wrapper->inputState = AUDIO_STATE_CONFIGURED;
 }
 
 void AudioInputModule::Start()
 {
-	if (wrapper->inputRunning)
+	if (wrapper->inputState == AUDIO_STATE_RUNNING)
 		return;
-	wrapper->inputRunning = true;
+	wrapper->inputState = AUDIO_STATE_RUNNING;
 }
 
 void AudioInputModule::Stop()
 {
-	wrapper->inputRunning = false;
+	if (wrapper->inputState != AUDIO_STATE_RUNNING)
+		return;
+	wrapper->inputState = AUDIO_STATE_CONFIGURED;
 }
 bool AudioInputModule::writeSamples(unsigned char *data)
 {
-	if (wrapper->inputRunning)
+	if (wrapper->inputState == AUDIO_STATE_RUNNING)
 	{
 		LOGE("STARTED");
-		InvokeCallback(data, wrapper->inputSampleSize);
+		InvokeCallback(data, wrapper->inputSamplesSize);
 		return true;
 	}
 	else

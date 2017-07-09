@@ -95,8 +95,8 @@ void VoIP::__destruct()
 
 Php::Value VoIP::writeSamples(Php::Parameters &params)
 {
-    unsigned char *data = (unsigned char *) emalloc(inputSampleSize);
-	memcpy(data, params[0], inputSampleSize);
+    unsigned char *data = (unsigned char *) emalloc(inputSamplesSize);
+	memcpy(data, params[0], inputSamplesSize);
     bool res = ((AudioInputModule *)(intptr_t)inst)->writeSamples(data);
     efree(data);
     return res;
@@ -210,6 +210,54 @@ void VoIP::setOutputLevel(Php::Parameters &params) {
     outputLevel = (double) params[0];
 }
 
+Php::Value VoIP::getState()
+{
+    return state;
+}
+
+Php::Value VoIP::getOutputState()
+{
+    return outputState;
+}
+
+Php::Value VoIP::getInputState()
+{
+    return inputState;
+}
+
+Php::Value VoIP::getOutputParams()
+{
+    Php::Value params;
+    params["bitsPerSample"] = outputBitsPerSample;
+    params["sampleRate"] = outputSampleRate;
+    params["channels"] = outputChannels;
+    params["samplePeriod"] = outputSamplePeriod;
+    params["writePeriod"] = outputWritePeriod;
+    params["sampleNumber"] = outputSampleNumber;
+    params["samplesSize"] = outputSamplesSize;
+    params["level"] = outputLevel;
+
+    return params;
+
+}
+
+Php::Value VoIP::getInputParams()
+{
+    Php::Value params;
+    params["bitsPerSample"] = inputBitsPerSample;
+    params["sampleRate"] = inputSampleRate;
+    params["channels"] = inputChannels;
+    params["samplePeriod"] = inputSamplePeriod;
+    params["writePeriod"] = inputWritePeriod;
+    params["sampleNumber"] = inputSampleNumber;
+    params["samplesSize"] = inputSamplesSize;
+
+    return params;
+
+}
+
+
+
 extern "C" {
 
 /**
@@ -238,6 +286,13 @@ PHPCPP_EXPORT void *get_module()
     voip.method("stopInput");
     voip.method("getOutputLevel");
     */
+
+
+    voip.method<&VoIP::getState>("getState", Php::Public | Php::Final);
+    voip.method<&VoIP::getOutputState>("getOutputState", Php::Public | Php::Final);
+    voip.method<&VoIP::getInputState>("getInputState", Php::Public | Php::Final);
+    voip.method<&VoIP::getOutputParams>("getOutputParams", Php::Public | Php::Final);
+    voip.method<&VoIP::getInputParams>("getInputParams", Php::Public | Php::Final);
 
     voip.method<&VoIP::__destruct>("__destruct", Php::Public | Php::Final);
     voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final);
@@ -309,6 +364,11 @@ PHPCPP_EXPORT void *get_module()
 
     voip.constant("PROXY_NONE", PROXY_NONE);
     voip.constant("PROXY_SOCKS5", PROXY_SOCKS5);
+
+    voip.constant("AUDIO_STATE_NONE", AUDIO_STATE_NONE);
+    voip.constant("AUDIO_STATE_CREATED", AUDIO_STATE_CREATED);
+    voip.constant("AUDIO_STATE_CONFIGURED", AUDIO_STATE_CONFIGURED);
+    voip.constant("AUDIO_STATE_RUNNING", AUDIO_STATE_RUNNING);
 
     Php::Namespace danog("danog");
     Php::Namespace MadelineProto("MadelineProto");
