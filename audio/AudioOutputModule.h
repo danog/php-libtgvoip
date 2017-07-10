@@ -8,8 +8,8 @@
 #define LIBTGVOIP_AUDIOOUTPUTPHP_H
 
 #include "../libtgvoip/audio/AudioOutput.h"
-#include "../main.h"
 #include "../libtgvoip/VoIPController.h"
+#include "../main.h"
 
 namespace tgvoip{ namespace audio{
 class AudioOutputModule : public AudioOutput{

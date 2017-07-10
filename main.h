@@ -12,7 +12,6 @@ If not, see <http://www.gnu.org/licenses/>.
 #define PHPLIBTGVOIP_H
 
 #include "libtgvoip/VoIPController.h"
-
 #include <php.h>
 #include <php_ini.h>
 #include <ext/standard/info.h>
@@ -26,6 +25,10 @@ If not, see <http://www.gnu.org/licenses/>.
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
+namespace tgvoip{ namespace audio{
+class AudioInputModule;
+class AudioOutputModule;
+}}
 class VoIP : public Php::Base
 {
   public:
@@ -108,6 +111,8 @@ class VoIP : public Php::Base
 
     int state = STATE_CREATED;
 
+    AudioInputModule *in;
+    AudioOutputModule *out;
   private:
     VoIPController *inst;
 };

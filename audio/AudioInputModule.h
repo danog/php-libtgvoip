@@ -9,12 +9,12 @@
 
 #include "../libtgvoip/audio/AudioInput.h"
 #include "../libtgvoip/threading.h"
-#include "../main.h"
 #include "../libtgvoip/VoIPController.h"
-
+#include "../main.h"
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
+
 
 namespace tgvoip{ namespace audio{
 class AudioInputModule : public AudioInput{

@@ -10,6 +10,8 @@ If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "main.h"
+#include "audio/AudioInputModule.h"
+#include "audio/AudioOutputModule.h"
 #include <string.h>
 #include <wchar.h>
 #include <map>
@@ -20,8 +22,6 @@ If not, see <http://www.gnu.org/licenses/>.
 #include "libtgvoip/threading.h"
 #include "libtgvoip/logging.h"
 
-#include "audio/AudioInputModule.h"
-#include "audio/AudioOutputModule.h"
 using namespace tgvoip;
 using namespace tgvoip::audio;
 using namespace std;
@@ -32,7 +32,8 @@ void VoIP::__construct()
     PHPthis = (Php::Object)this;
     madeline = params[0];
     current_call = params[1];*/
-
+    in=NULL;
+    out=NULL;
     inst = new VoIPController();
 
     inst->implData = (void *) this;
@@ -97,14 +98,14 @@ Php::Value VoIP::writeSamples(Php::Parameters &params)
 {
     unsigned char *data = (unsigned char *) emalloc(inputSamplesSize);
 	memcpy(data, params[0], inputSamplesSize);
-    bool res = ((AudioInputModule *)(intptr_t)inst)->writeSamples(data);
+    bool res = in->writeSamples(data);
     efree(data);
     return res;
 }
 
 Php::Value VoIP::readSamples()
 {
-    const char *samples = (const char *) ((AudioOutputModule *)(intptr_t) inst)->readSamples();
+    const char *samples = (const char *) out->readSamples();
     Php::Value returnsamples = samples;
     efree((void *) samples);
     return returnsamples;

@@ -14,12 +14,14 @@ using namespace tgvoip::audio;
 AudioInputModule::AudioInputModule(std::string deviceID, void *controller)
 {
 	wrapper = (VoIP *)((VoIPController *)controller)->implData;
+	wrapper->in = this;
 	wrapper->inputState = AUDIO_STATE_CREATED;
 }
 
 AudioInputModule::~AudioInputModule()
 {
 	wrapper->inputState = AUDIO_STATE_NONE;
+	wrapper->in = NULL;
 }
 
 void AudioInputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels)
