@@ -28,8 +28,26 @@ public:
 	virtual void Stop();
 	bool writeSamples(unsigned char *data);
 	static void EnumerateDevices(std::vector<AudioInputDevice>& devs);
+/*
+	static void* StartSenderThread(void* input);
+	void RunSenderThread();
+*/
+    int inputBitsPerSample;
+    int inputSampleRate;
+    int inputChannels;
+    int inputSamplePeriod;
+    int inputWritePeriod;
+    int inputSamplePeriodSec;
+    int inputWritePeriodSec;
+    int inputSampleNumber;
+    int inputSamplesSize;
+    size_t inputCSamplesSize;
+    int inputState = AUDIO_STATE_NONE;
 
 private:
+
+
+//	tgvoip_thread_t senderThread;
 	VoIP *wrapper;
 };
 }}

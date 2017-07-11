@@ -17,6 +17,7 @@ If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <string>
 #include <vector>
+#include <queue>
 
 #include "libtgvoip/VoIPServerConfig.h"
 #include "libtgvoip/threading.h"
@@ -34,6 +35,7 @@ void VoIP::__construct()
     current_call = params[1];*/
     in=NULL;
     out=NULL;
+    outputFile=NULL;
     inst = new VoIPController();
 
     inst->implData = (void *) this;
@@ -41,6 +43,10 @@ void VoIP::__construct()
         ((VoIP *)controller->implData)->state = state;
     });
     
+    init_mutex(inputMutex);
+    init_mutex(outputMutex);
+    configuringInput = false;
+    configuringOutput = false;
 }
 
 void VoIP::start()
@@ -91,25 +97,11 @@ void VoIP::setRemoteEndpoints(Php::Parameters &params)
 
 void VoIP::__destruct()
 {
+    free_mutex(outputMutex);
+    free_mutex(inputMutex);
     delete inst;
 }
 
-Php::Value VoIP::writeSamples(Php::Parameters &params)
-{
-    unsigned char *data = (unsigned char *) emalloc(inputSamplesSize);
-	memcpy(data, params[0], inputSamplesSize);
-    bool res = in->writeSamples(data);
-    efree(data);
-    return res;
-}
-
-Php::Value VoIP::readSamples()
-{
-    const char *samples = (const char *) out->readSamples();
-    Php::Value returnsamples = samples;
-    efree((void *) samples);
-    return returnsamples;
-}
 
 Php::Value VoIP::getDebugString()
 {
@@ -119,6 +111,84 @@ Php::Value VoIP::getDebugString()
     efree(buf);
     return returnvalue;
 }
+/*
+Php::Value VoIP::play(Php::Parameters &params) {
+    FILE *tmp = fopen(params[0], "r");
+
+    if (tmp == NULL) {
+        throw Php::Exception("Could not open file!");
+        return false;
+    }
+
+    configuringInput = true;
+    lock_mutex(inputMutex);
+    inputFiles.push(tmp);
+    configuringInput = false;
+    unlock_mutex(inputMutex);
+
+    return this;
+}
+
+Php::Value VoIP::playOnHold(Php::Parameters &params) {
+    configuringInput = true;
+    FILE *tmp = NULL;
+
+    lock_mutex(inputMutex);
+    while (holdFiles.size()) {
+        fclose(holdFiles.front());
+        delete holdFiles.front();
+        holdFiles.pop();
+    }
+    for (int i = 0; i < params[0].size(); i++) {
+        tmp = fopen(params[0][i], "rb");
+        if (tmp == NULL) {
+            throw Php::Exception("Could not open file!");
+            configuringInput = false;
+            unlock_mutex(inputMutex);
+            return false;
+        }
+        holdFiles.push(tmp);
+    }
+    configuringInput = false;
+    unlock_mutex(inputMutex);
+    return true;
+}
+*/
+Php::Value VoIP::setOutputFile(Php::Parameters &params) {
+    configuringOutput = true;
+
+    lock_mutex(outputMutex);
+    outputFile = fopen(params[0], "wb");
+    if (outputFile == NULL) {
+        throw Php::Exception("Could not open file!");
+        configuringOutput = false;
+        unlock_mutex(outputMutex);
+        return false;
+
+    }
+    configuringOutput = false;
+    unlock_mutex(outputMutex);
+
+		fputs(configuringOutput ? "configuringOutput = true\n" : "configuringOutput = false\n", stdout);
+    return true;
+
+}
+Php::Value VoIP::unsetOutputFile(Php::Parameters &params) {
+    if (outputFile == NULL) {
+        return false;
+    }
+
+
+    configuringOutput = true;
+    lock_mutex(outputMutex);
+    fclose(outputFile);
+    outputFile = NULL;
+    configuringOutput = false;
+    unlock_mutex(outputMutex);
+    
+    return true;
+}
+
 
 void VoIP::setNetworkType(Php::Parameters &params)
 {
@@ -208,7 +278,7 @@ Php::Value VoIP::getDebugLog()
 }
 
 void VoIP::setOutputLevel(Php::Parameters &params) {
-    outputLevel = (double) params[0];
+    out->outputLevel = (double) params[0];
 }
 
 Php::Value VoIP::getState()
@@ -218,25 +288,25 @@ Php::Value VoIP::getState()
 
 Php::Value VoIP::getOutputState()
 {
-    return outputState;
+    return out->outputState;
 }
 
 Php::Value VoIP::getInputState()
 {
-    return inputState;
+    return in->inputState;
 }
 
 Php::Value VoIP::getOutputParams()
 {
     Php::Value params;
-    params["bitsPerSample"] = outputBitsPerSample;
-    params["sampleRate"] = outputSampleRate;
-    params["channels"] = outputChannels;
-    params["samplePeriod"] = outputSamplePeriod;
-    params["writePeriod"] = outputWritePeriod;
-    params["sampleNumber"] = outputSampleNumber;
-    params["samplesSize"] = outputSamplesSize;
-    params["level"] = outputLevel;
+    params["bitsPerSample"] = out->outputBitsPerSample;
+    params["sampleRate"] = out->outputSampleRate;
+    params["channels"] = out->outputChannels;
+    params["samplePeriod"] = out->outputSamplePeriod;
+    params["writePeriod"] = out->outputWritePeriod;
+    params["sampleNumber"] = out->outputSampleNumber;
+    params["samplesSize"] = out->outputSamplesSize;
+    params["level"] = out->outputLevel;
 
     return params;
 
@@ -245,13 +315,13 @@ Php::Value VoIP::getOutputParams()
 Php::Value VoIP::getInputParams()
 {
     Php::Value params;
-    params["bitsPerSample"] = inputBitsPerSample;
-    params["sampleRate"] = inputSampleRate;
-    params["channels"] = inputChannels;
-    params["samplePeriod"] = inputSamplePeriod;
-    params["writePeriod"] = inputWritePeriod;
-    params["sampleNumber"] = inputSampleNumber;
-    params["samplesSize"] = inputSamplesSize;
+    params["bitsPerSample"] = in->inputBitsPerSample;
+    params["sampleRate"] = in->inputSampleRate;
+    params["channels"] = in->inputChannels;
+    params["samplePeriod"] = in->inputSamplePeriod;
+    params["writePeriod"] = in->inputWritePeriod;
+    params["sampleNumber"] = in->inputSampleNumber;
+    params["samplesSize"] = in->inputSamplesSize;
 
     return params;
 
@@ -331,8 +401,16 @@ PHPCPP_EXPORT void *get_module()
     voip.method<&VoIP::start>("start", Php::Public | Php::Final);
     voip.method<&VoIP::connect>("connect", Php::Public | Php::Final);
 
+    /*
     voip.method<&VoIP::readSamples>("readSamples", Php::Public | Php::Final);
     voip.method<&VoIP::writeSamples>("writeSamples", Php::Public | Php::Final, {Php::ByVal("samples", Php::Type::String)});
+    */
+    /*
+    voip.method<&VoIP::play>("then", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
+    voip.method<&VoIP::play>("play", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
+    */
+    voip.method<&VoIP::setOutputFile>("setOutputFile", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
+    voip.method<&VoIP::unsetOutputFile>("unsetOutputFile", Php::Public | Php::Final);
 
     voip.constant("STATE_CREATED", STATE_CREATED);
     voip.constant("STATE_WAIT_INIT", STATE_WAIT_INIT);

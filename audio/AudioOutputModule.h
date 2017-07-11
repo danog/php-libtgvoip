@@ -10,6 +10,7 @@
 #include "../libtgvoip/audio/AudioOutput.h"
 #include "../libtgvoip/VoIPController.h"
 #include "../main.h"
+#include "../libtgvoip/threading.h"
 
 namespace tgvoip{ namespace audio{
 class AudioOutputModule : public AudioOutput{
@@ -26,7 +27,24 @@ public:
 	unsigned char * readSamples();
 	static void EnumerateDevices(std::vector<AudioOutputDevice>& devs);
 
+	static void* StartReceiverThread(void* output);
+	void RunReceiverThread();
+
+    int outputBitsPerSample;
+    int outputSampleRate;
+    int outputChannels;
+    int outputSamplePeriod;
+    int outputWritePeriod;
+    double outputSamplePeriodSec;
+    double outputWritePeriodSec;
+    int outputSampleNumber;
+    int outputSamplesSize;
+    size_t outputCSamplesSize;
+    float outputLevel = 0.0;
+    int outputState = AUDIO_STATE_NONE;
+
 private:
+	tgvoip_thread_t receiverThread;
 	VoIP *wrapper;
 };
 }}

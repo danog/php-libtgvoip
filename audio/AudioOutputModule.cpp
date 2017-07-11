@@ -15,56 +15,95 @@ AudioOutputModule::AudioOutputModule(std::string deviceID, void *controller)
 {
 	wrapper = (VoIP *)((VoIPController *)controller)->implData;
 	wrapper->out = this;
-	wrapper->outputState = AUDIO_STATE_CREATED;
+	outputState = AUDIO_STATE_CREATED;
 }
 AudioOutputModule::~AudioOutputModule()
 {
-	wrapper->outputState = AUDIO_STATE_NONE;
+	outputState = AUDIO_STATE_NONE;
 	wrapper->out = NULL;
+
+	LOGD("before join receiverThread");
+	join_thread(receiverThread);
+	
 }
+
 
 void AudioOutputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels)
 {
-	wrapper->outputSampleNumber = 960;
-	wrapper->outputSampleRate = sampleRate;
-	wrapper->outputBitsPerSample = bitsPerSample;
-	wrapper->outputChannels = channels;
-	wrapper->outputSamplePeriod = 1.0 / sampleRate * 1000000;
-	wrapper->outputWritePeriod = 1.0 / sampleRate * wrapper->outputSampleNumber * 1000000;
-	wrapper->outputSamplesSize = (wrapper->outputSampleNumber * wrapper->outputChannels * wrapper->outputBitsPerSample) / 8;
+	outputSampleNumber = 960;
+	outputSampleRate = sampleRate;
+	outputBitsPerSample = bitsPerSample;
+	outputChannels = channels;
+	outputSamplePeriod = 1.0 / sampleRate * 1000000;
+	outputWritePeriod = 1.0 / sampleRate * outputSampleNumber * 1000000;
+	outputSamplePeriodSec = 1.0 / sampleRate;
+	outputWritePeriodSec = 1.0 / sampleRate * outputSampleNumber;
+	outputSamplesSize = outputSampleNumber * outputChannels * outputBitsPerSample / 8;
+	outputCSamplesSize = outputSampleNumber * outputChannels * outputBitsPerSample / 8 * sizeof(unsigned char);
 
-	wrapper->outputState = AUDIO_STATE_CONFIGURED;
+	outputState = AUDIO_STATE_CONFIGURED;
 }
 
 void AudioOutputModule::Start()
 {
-	if (wrapper->outputState == AUDIO_STATE_RUNNING)
+	if (outputState == AUDIO_STATE_RUNNING)
 		return;
-	wrapper->outputState = AUDIO_STATE_RUNNING;
+	outputState = AUDIO_STATE_RUNNING;
+	
+
+	LOGE("STARTING RECEIVER THREAD");
+	start_thread(receiverThread, StartReceiverThread, this);
+	set_thread_priority(receiverThread, get_thread_max_priority());
+	set_thread_name(receiverThread, "voip-receiver");
+	
 }
 
 void AudioOutputModule::Stop()
 {
-	if (wrapper->outputState != AUDIO_STATE_RUNNING)
+	if (outputState != AUDIO_STATE_RUNNING)
 		return;
-	wrapper->outputState = AUDIO_STATE_CONFIGURED;
+	outputState = AUDIO_STATE_CONFIGURED;
 }
 
 bool AudioOutputModule::IsPlaying()
 {
-	return wrapper->outputState == AUDIO_STATE_RUNNING;
+	return outputState == AUDIO_STATE_RUNNING;
 }
 
 float AudioOutputModule::GetLevel()
 {
-	return wrapper->outputLevel;
+	return outputLevel;
 }
 
-unsigned char *AudioOutputModule::readSamples()
-{
-	unsigned char *buf = (unsigned char *)emalloc(wrapper->outputSamplesSize);
-	InvokeCallback(buf, wrapper->outputSamplesSize);
-	return buf;
+
+void* AudioOutputModule::StartReceiverThread(void* output){
+	((AudioOutputModule*)output)->RunReceiverThread();
+	return NULL;
+}
+
+void AudioOutputModule::RunReceiverThread() {
+	unsigned char *data = (unsigned char *) malloc(outputCSamplesSize);
+	double time = VoIPController::GetCurrentTime();
+	while (outputState == AUDIO_STATE_RUNNING) {
+		lock_mutex(wrapper->outputMutex);
+		fputs(wrapper->configuringOutput ? "configuringOutput = true\n" : "configuringOutput = false\n", stdout);
+		fputs(wrapper->configuringInput ? "configuringInput = true\n" : "configuringInput = false\n", stdout);
+
+		if(wrapper->configuringOutput) sleep(1);
+		while (!wrapper->configuringOutput && outputState == AUDIO_STATE_RUNNING) {
+			usleep((outputWritePeriodSec - (VoIPController::GetCurrentTime() - time))*1000000.0);
+			time = VoIPController::GetCurrentTime();
+
+			InvokeCallback(data, outputCSamplesSize);
+			if (wrapper->outputFile != NULL) {
+				if (fwrite(data, sizeof(unsigned char), outputSamplesSize, wrapper->outputFile) != outputCSamplesSize) {
+					LOGE("COULD NOT WRITE DATA TO FILE");
+				} else LOGE("WROTE");
+			}else LOGE("NO FILE");
+		}
+		unlock_mutex(wrapper->outputMutex);
+	}
+	free(data);
 }
 
 void AudioOutputModule::EnumerateDevices(std::vector<AudioOutputDevice> &devs)

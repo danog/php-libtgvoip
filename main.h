@@ -16,6 +16,9 @@ If not, see <http://www.gnu.org/licenses/>.
 #include <php_ini.h>
 #include <ext/standard/info.h>
 #include <phpcpp.h>
+#include <stdio.h>
+#include "libtgvoip/threading.h"
+#include <queue>
 
 #define AUDIO_STATE_NONE -1
 #define AUDIO_STATE_CREATED 0
@@ -46,9 +49,15 @@ class VoIP : public Php::Base
 
     void release();
 
-    Php::Value writeSamples(Php::Parameters &params);
+  /*
+  
+    Php::Value play(Php::Parameters &params);
+    Php::Value playOnHold(Php::Parameters &params);
 
-    Php::Value readSamples();
+    */
+    Php::Value setOutputFile(Php::Parameters &params);
+    Php::Value unsetOutputFile(Php::Parameters &params);
+
 
     Php::Value getDebugString();
 
@@ -90,29 +99,22 @@ class VoIP : public Php::Base
     Php::Value current_call;
     */
 
-    int inputBitsPerSample;
-    int inputSampleRate;
-    int inputChannels;
-    int inputSamplePeriod;
-    int inputWritePeriod;
-    int inputSampleNumber;
-    int inputSamplesSize;
-    int inputState = AUDIO_STATE_NONE;
-
-    int outputBitsPerSample;
-    int outputSampleRate;
-    int outputChannels;
-    int outputSamplePeriod;
-    int outputWritePeriod;
-    int outputSampleNumber;
-    int outputSamplesSize;
-    float outputLevel = 0.0;
-    int outputState = AUDIO_STATE_NONE;
 
     int state = STATE_CREATED;
 
     AudioInputModule *in;
     AudioOutputModule *out;
+/*
+    std::queue<FILE *> inputFiles;
+    std::queue<FILE *> holdFiles;
+*/
+    tgvoip_mutex_t inputMutex;
+    tgvoip_mutex_t outputMutex;
+
+    bool configuringOutput;
+    bool configuringInput;
+    
+    FILE *outputFile;
   private:
     VoIPController *inst;
 };

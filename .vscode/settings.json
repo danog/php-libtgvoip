@@ -30,6 +30,7 @@
         "ostream": "cpp",
         "sstream": "cpp",
         "streambuf": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "queue": "cpp"
     }
 }
