@@ -30,8 +30,8 @@ void AudioInputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, ui
 	wrapper->inputSampleRate = sampleRate;
 	wrapper->inputBitsPerSample = bitsPerSample;
 	wrapper->inputChannels = channels;
-	wrapper->inputSamplePeriod = 1 / sampleRate * 1000000;
-	wrapper->inputWritePeriod = 1 / sampleRate * wrapper->inputSampleNumber * 1000000;
+	wrapper->inputSamplePeriod = 1.0 / sampleRate * 1000000;
+	wrapper->inputWritePeriod = 1.0 / sampleRate * wrapper->inputSampleNumber * 1000000;
 	wrapper->inputSamplesSize = wrapper->inputSampleNumber * wrapper->inputChannels * wrapper->inputBitsPerSample / 8;
 
 	wrapper->inputState = AUDIO_STATE_CONFIGURED;
@@ -54,13 +54,11 @@ bool AudioInputModule::writeSamples(unsigned char *data)
 {
 	if (wrapper->inputState == AUDIO_STATE_RUNNING)
 	{
-		LOGE("STARTED");
 		InvokeCallback(data, wrapper->inputSamplesSize);
 		return true;
 	}
 	else
 	{
-		LOGE("NOT STARTED");
 		return false;
 	}
 }

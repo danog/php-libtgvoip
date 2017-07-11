@@ -29,9 +29,9 @@ void AudioOutputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, u
 	wrapper->outputSampleRate = sampleRate;
 	wrapper->outputBitsPerSample = bitsPerSample;
 	wrapper->outputChannels = channels;
-	wrapper->outputSamplePeriod = 1 / sampleRate * 1000000;
-	wrapper->outputWritePeriod = 1 / sampleRate * wrapper->outputSampleNumber * 1000000;
-	wrapper->outputSamplesSize = wrapper->outputSampleNumber * wrapper->outputChannels * wrapper->outputBitsPerSample / 8;
+	wrapper->outputSamplePeriod = 1.0 / sampleRate * 1000000;
+	wrapper->outputWritePeriod = 1.0 / sampleRate * wrapper->outputSampleNumber * 1000000;
+	wrapper->outputSamplesSize = (wrapper->outputSampleNumber * wrapper->outputChannels * wrapper->outputBitsPerSample) / 8;
 
 	wrapper->outputState = AUDIO_STATE_CONFIGURED;
 }
