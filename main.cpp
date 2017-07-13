@@ -35,7 +35,6 @@ void VoIP::__construct()
     current_call = params[1];*/
     in=NULL;
     out=NULL;
-    outputFile=NULL;
     inst = new VoIPController();
 
     inst->implData = (void *) this;
@@ -43,11 +42,13 @@ void VoIP::__construct()
         ((VoIP *)controller->implData)->state = state;
     });
     
-    init_mutex(inputMutex);
-    init_mutex(outputMutex);
-    configuringInput = false;
-    configuringOutput = false;
 }
+
+void VoIP::__destruct()
+{
+    delete inst;
+}
+
 
 void VoIP::start()
 {
@@ -56,14 +57,15 @@ void VoIP::start()
 
 void VoIP::connect()
 {
+
     inst->Connect();
 }
 void VoIP::setEncryptionKey(Php::Parameters &params)
 {
-    char *key = (char *) emalloc(256);
+    char *key = (char *) malloc(256);
     memcpy(key, params[0], 256);
     inst->SetEncryptionKey(key, (bool)params[1]);
-    efree(key);
+    free(key);
 }
 
 void VoIP::setRemoteEndpoints(Php::Parameters &params)
@@ -77,7 +79,7 @@ void VoIP::setRemoteEndpoints(Php::Parameters &params)
 
         tgvoip::IPv4Address v4addr(ip);
         tgvoip::IPv6Address v6addr("::0");
-        unsigned char *pTag = (unsigned char *) emalloc(16);
+        unsigned char *pTag = (unsigned char *) malloc(16);
 
         if (ipv6 != "")
         {
@@ -90,105 +92,39 @@ void VoIP::setRemoteEndpoints(Php::Parameters &params)
         }
 
         eps.push_back(Endpoint(params[0][i]["id"], (int32_t)params[0][i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
-        efree(pTag);
+        free(pTag);
     }
     inst->SetRemoteEndpoints(eps, params[1]);
-}
-
-void VoIP::__destruct()
-{
-    free_mutex(outputMutex);
-    free_mutex(inputMutex);
-    delete inst;
 }
 
 
 Php::Value VoIP::getDebugString()
 {
-    char *buf = (char *) emalloc(10240);
+    char *buf = (char *) malloc(10240);
     inst->GetDebugString(buf, 10240);
     Php::Value returnvalue = buf;
-    efree(buf);
+    free(buf);
     return returnvalue;
 }
-/*
-Php::Value VoIP::play(Php::Parameters &params) {
-    FILE *tmp = fopen(params[0], "r");
 
-    if (tmp == NULL) {
-        throw Php::Exception("Could not open file!");
-        return false;
-    }
-
-    configuringInput = true;
-    lock_mutex(inputMutex);
-    inputFiles.push(tmp);
-    configuringInput = false;
-    unlock_mutex(inputMutex);
-
-    return this;
+Php::Value VoIP::setOutputFile(Php::Parameters &params) {
+    return out->setOutputFile(params[0]);
 }
+Php::Value VoIP::unsetOutputFile() {
+    return out->unsetOutputFile();
+}
+
+Php::Value VoIP::play(Php::Parameters &params) {
+    if (in->play(params[0])) {
+        return this;
+    }
+    return false;
+}
+
 
 Php::Value VoIP::playOnHold(Php::Parameters &params) {
-    configuringInput = true;
-    FILE *tmp = NULL;
-
-    lock_mutex(inputMutex);
-    while (holdFiles.size()) {
-        fclose(holdFiles.front());
-        delete holdFiles.front();
-        holdFiles.pop();
-    }
-    for (int i = 0; i < params[0].size(); i++) {
-        tmp = fopen(params[0][i], "rb");
-        if (tmp == NULL) {
-            throw Php::Exception("Could not open file!");
-            configuringInput = false;
-            unlock_mutex(inputMutex);
-            return false;
-        }
-        holdFiles.push(tmp);
-    }
-    configuringInput = false;
-    unlock_mutex(inputMutex);
-    return true;
+    return in->playOnHold(params);
 }
-*/
-Php::Value VoIP::setOutputFile(Php::Parameters &params) {
-    configuringOutput = true;
-
-    lock_mutex(outputMutex);
-    outputFile = fopen(params[0], "wb");
-    if (outputFile == NULL) {
-        throw Php::Exception("Could not open file!");
-        configuringOutput = false;
-        unlock_mutex(outputMutex);
-        return false;
-
-    }
-    configuringOutput = false;
-    unlock_mutex(outputMutex);
-
-		fputs(configuringOutput ? "configuringOutput = true\n" : "configuringOutput = false\n", stdout);
-    return true;
-
-}
-Php::Value VoIP::unsetOutputFile(Php::Parameters &params) {
-    if (outputFile == NULL) {
-        return false;
-    }
-
-
-    configuringOutput = true;
-    lock_mutex(outputMutex);
-    fclose(outputFile);
-    outputFile = NULL;
-    configuringOutput = false;
-    unlock_mutex(outputMutex);
-    
-    return true;
-}
-
 
 void VoIP::setNetworkType(Php::Parameters &params)
 {
@@ -288,12 +224,12 @@ Php::Value VoIP::getState()
 
 Php::Value VoIP::getOutputState()
 {
-    return out->outputState;
+    return outputState;
 }
 
 Php::Value VoIP::getInputState()
 {
-    return in->inputState;
+    return inputState;
 }
 
 Php::Value VoIP::getOutputParams()
@@ -400,15 +336,11 @@ PHPCPP_EXPORT void *get_module()
     voip.method<&VoIP::getStats>("getStats", Php::Public | Php::Final);
     voip.method<&VoIP::start>("start", Php::Public | Php::Final);
     voip.method<&VoIP::connect>("connect", Php::Public | Php::Final);
-
-    /*
-    voip.method<&VoIP::readSamples>("readSamples", Php::Public | Php::Final);
-    voip.method<&VoIP::writeSamples>("writeSamples", Php::Public | Php::Final, {Php::ByVal("samples", Php::Type::String)});
-    */
-    /*
+    
     voip.method<&VoIP::play>("then", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
     voip.method<&VoIP::play>("play", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
-    */
+    voip.method<&VoIP::playOnHold>("playOnHold", Php::Public | Php::Final, {Php::ByVal("files", Php::Type::Array)});
+    
     voip.method<&VoIP::setOutputFile>("setOutputFile", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
     voip.method<&VoIP::unsetOutputFile>("unsetOutputFile", Php::Public | Php::Final);
 

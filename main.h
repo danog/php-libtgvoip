@@ -12,9 +12,10 @@ If not, see <http://www.gnu.org/licenses/>.
 #define PHPLIBTGVOIP_H
 
 #include "libtgvoip/VoIPController.h"
+/*
 #include <php.h>
 #include <php_ini.h>
-#include <ext/standard/info.h>
+#include <ext/standard/info.h>*/
 #include <phpcpp.h>
 #include <stdio.h>
 #include "libtgvoip/threading.h"
@@ -48,15 +49,13 @@ class VoIP : public Php::Base
     void setRemoteEndpoints(Php::Parameters &params);
 
     void release();
-
-  /*
   
     Php::Value play(Php::Parameters &params);
     Php::Value playOnHold(Php::Parameters &params);
 
-    */
+    
     Php::Value setOutputFile(Php::Parameters &params);
-    Php::Value unsetOutputFile(Php::Parameters &params);
+    Php::Value unsetOutputFile();
 
 
     Php::Value getDebugString();
@@ -104,17 +103,10 @@ class VoIP : public Php::Base
 
     AudioInputModule *in;
     AudioOutputModule *out;
-/*
-    std::queue<FILE *> inputFiles;
-    std::queue<FILE *> holdFiles;
-*/
-    tgvoip_mutex_t inputMutex;
-    tgvoip_mutex_t outputMutex;
 
-    bool configuringOutput;
-    bool configuringInput;
+    int inputState = AUDIO_STATE_NONE;
+    int outputState = AUDIO_STATE_NONE;
     
-    FILE *outputFile;
   private:
     VoIPController *inst;
 };

@@ -7,26 +7,70 @@
 #include "AudioOutputModule.h"
 #include <stdio.h>
 #include "../libtgvoip/logging.h"
+#include <unistd.h>
+#include <phpcpp.h>
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-AudioOutputModule::AudioOutputModule(std::string deviceID, void *controller)
+AudioOutputModule::AudioOutputModule(std::string deviceID, VoIPController *controller)
 {
-	wrapper = (VoIP *)((VoIPController *)controller)->implData;
+	wrapper = (VoIP *)(controller->implData);
 	wrapper->out = this;
-	outputState = AUDIO_STATE_CREATED;
+	wrapper->outputState = AUDIO_STATE_CREATED;
+    outputFile=NULL;
+	configuringOutput = false;
+	//init_mutex(outputMutex);
+
 }
 AudioOutputModule::~AudioOutputModule()
 {
-	outputState = AUDIO_STATE_NONE;
+	wrapper->outputState = AUDIO_STATE_NONE;
 	wrapper->out = NULL;
 
 	LOGD("before join receiverThread");
 	join_thread(receiverThread);
+
+	this->unsetOutputFile();
+    free_mutex(outputMutex);
 	
 }
 
+bool AudioOutputModule::unsetOutputFile() {
+	if (outputFile == NULL) {
+        return false;
+    }
+
+    configuringOutput = true;
+    lock_mutex(outputMutex);
+	fflush(outputFile);
+    fclose(outputFile);
+    outputFile = NULL;
+    configuringOutput = false;
+    unlock_mutex(outputMutex);
+    
+    return true;
+
+}
+bool AudioOutputModule::setOutputFile(const char *file) {
+    configuringOutput = true;
+
+    lock_mutex(outputMutex);
+    if (outputFile != NULL) {
+        fclose(outputFile);
+        outputFile=NULL;
+    }
+    outputFile = fopen(file, "wb");
+    if (outputFile == NULL) {
+        throw Php::Exception("Could not open file!");
+        configuringOutput = false;
+        unlock_mutex(outputMutex);
+        return false;
+    }
+    configuringOutput = false;
+    unlock_mutex(outputMutex);
+    return true;
+}
 
 void AudioOutputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels)
 {
@@ -41,16 +85,17 @@ void AudioOutputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, u
 	outputSamplesSize = outputSampleNumber * outputChannels * outputBitsPerSample / 8;
 	outputCSamplesSize = outputSampleNumber * outputChannels * outputBitsPerSample / 8 * sizeof(unsigned char);
 
-	outputState = AUDIO_STATE_CONFIGURED;
+	wrapper->outputState = AUDIO_STATE_CONFIGURED;
+	
+
 }
 
 void AudioOutputModule::Start()
 {
-	if (outputState == AUDIO_STATE_RUNNING)
+	if (wrapper->outputState == AUDIO_STATE_RUNNING)
 		return;
-	outputState = AUDIO_STATE_RUNNING;
+	wrapper->outputState = AUDIO_STATE_RUNNING;
 	
-
 	LOGE("STARTING RECEIVER THREAD");
 	start_thread(receiverThread, StartReceiverThread, this);
 	set_thread_priority(receiverThread, get_thread_max_priority());
@@ -60,14 +105,14 @@ void AudioOutputModule::Start()
 
 void AudioOutputModule::Stop()
 {
-	if (outputState != AUDIO_STATE_RUNNING)
+	if (wrapper->outputState != AUDIO_STATE_RUNNING)
 		return;
-	outputState = AUDIO_STATE_CONFIGURED;
+	wrapper->outputState = AUDIO_STATE_CONFIGURED;
 }
 
 bool AudioOutputModule::IsPlaying()
 {
-	return outputState == AUDIO_STATE_RUNNING;
+	return wrapper->outputState == AUDIO_STATE_RUNNING;
 }
 
 float AudioOutputModule::GetLevel()
@@ -84,24 +129,27 @@ void* AudioOutputModule::StartReceiverThread(void* output){
 void AudioOutputModule::RunReceiverThread() {
 	unsigned char *data = (unsigned char *) malloc(outputCSamplesSize);
 	double time = VoIPController::GetCurrentTime();
-	while (outputState == AUDIO_STATE_RUNNING) {
-		lock_mutex(wrapper->outputMutex);
-		fputs(wrapper->configuringOutput ? "configuringOutput = true\n" : "configuringOutput = false\n", stdout);
-		fputs(wrapper->configuringInput ? "configuringInput = true\n" : "configuringInput = false\n", stdout);
+	double sleeptime;
 
-		if(wrapper->configuringOutput) sleep(1);
-		while (!wrapper->configuringOutput && outputState == AUDIO_STATE_RUNNING) {
-			usleep((outputWritePeriodSec - (VoIPController::GetCurrentTime() - time))*1000000.0);
+	while (wrapper->outputState == AUDIO_STATE_RUNNING) {
+		lock_mutex(outputMutex);
+		
+		while (!configuringOutput && wrapper->outputState == AUDIO_STATE_RUNNING) {
+			if ((sleeptime = (outputWritePeriodSec - (VoIPController::GetCurrentTime() - time))*1000000.0) < 0) {
+				LOGE("Receiver: I'm late!");
+			} else {
+				usleep(sleeptime);
+			}
+
 			time = VoIPController::GetCurrentTime();
-
 			InvokeCallback(data, outputCSamplesSize);
-			if (wrapper->outputFile != NULL) {
-				if (fwrite(data, sizeof(unsigned char), outputSamplesSize, wrapper->outputFile) != outputCSamplesSize) {
+			if (outputFile != NULL) {
+				if (fwrite(data, sizeof(unsigned char), outputSamplesSize, outputFile) != outputCSamplesSize) {
 					LOGE("COULD NOT WRITE DATA TO FILE");
-				} else LOGE("WROTE");
-			}else LOGE("NO FILE");
+				}
+			}
 		}
-		unlock_mutex(wrapper->outputMutex);
+		unlock_mutex(outputMutex);
 	}
 	free(data);
 }

@@ -20,7 +20,7 @@ namespace tgvoip{ namespace audio{
 class AudioInputModule : public AudioInput{
 
 public:
-	AudioInputModule(std::string deviceID, void *controller);
+	AudioInputModule(std::string deviceID, VoIPController *controller);
 	virtual ~AudioInputModule();
 
 	virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
@@ -28,26 +28,35 @@ public:
 	virtual void Stop();
 	bool writeSamples(unsigned char *data);
 	static void EnumerateDevices(std::vector<AudioInputDevice>& devs);
-/*
+
+    bool play(const char *file);
+    bool playOnHold(Php::Parameters &params);
+
 	static void* StartSenderThread(void* input);
 	void RunSenderThread();
-*/
+
     int inputBitsPerSample;
     int inputSampleRate;
     int inputChannels;
     int inputSamplePeriod;
     int inputWritePeriod;
-    int inputSamplePeriodSec;
-    int inputWritePeriodSec;
+    double inputSamplePeriodSec;
+    double inputWritePeriodSec;
     int inputSampleNumber;
     int inputSamplesSize;
     size_t inputCSamplesSize;
-    int inputState = AUDIO_STATE_NONE;
+
+
+    std::queue<FILE *> inputFiles;
+    std::queue<FILE *> holdFiles;
+
+    tgvoip_mutex_t inputMutex;
+    bool configuringInput;
 
 private:
 
 
-//	tgvoip_thread_t senderThread;
+	tgvoip_thread_t senderThread;
 	VoIP *wrapper;
 };
 }}
