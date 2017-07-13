@@ -35,6 +35,7 @@ void VoIP::__construct()
     current_call = params[1];*/
     in=NULL;
     out=NULL;
+    playing = false;
     inst = new VoIPController();
 
     inst->implData = (void *) this;
@@ -222,6 +223,11 @@ Php::Value VoIP::getState()
     return state;
 }
 
+Php::Value VoIP::isPlaying()
+{
+    return playing;
+}
+
 Php::Value VoIP::getOutputState()
 {
     return outputState;
@@ -296,6 +302,7 @@ PHPCPP_EXPORT void *get_module()
 
 
     voip.method<&VoIP::getState>("getState", Php::Public | Php::Final);
+    voip.method<&VoIP::isPlaying>("isPlaying", Php::Public | Php::Final);
     voip.method<&VoIP::getOutputState>("getOutputState", Php::Public | Php::Final);
     voip.method<&VoIP::getInputState>("getInputState", Php::Public | Php::Final);
     voip.method<&VoIP::getOutputParams>("getOutputParams", Php::Public | Php::Final);

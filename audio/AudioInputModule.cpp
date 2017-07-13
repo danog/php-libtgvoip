@@ -151,7 +151,9 @@ void AudioInputModule::RunSenderThread() {
 					inputFiles.pop();
 					memset(data + (read % inputCSamplesSize), 0, inputCSamplesSize - (read % inputCSamplesSize));
 				}
+				wrapper->playing = true;
 			} else {
+				wrapper->playing = false;
 				if (holdFiles.empty()) {
 					memset(data, 0, inputCSamplesSize);
 				} else {

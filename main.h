@@ -93,6 +93,9 @@ class VoIP : public Php::Base
 
     Php::Value getOutputParams();
     Php::Value getInputParams();
+
+    Php::Value isPlaying();
+
     /*
     Php::Value madeline;
     Php::Value current_call;
@@ -106,7 +109,7 @@ class VoIP : public Php::Base
 
     int inputState = AUDIO_STATE_NONE;
     int outputState = AUDIO_STATE_NONE;
-    
+    bool playing;
   private:
     VoIPController *inst;
 };
