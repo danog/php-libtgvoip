@@ -36,81 +36,55 @@ class AudioOutputModule;
 class VoIP : public Php::Base
 {
   public:
-    void __construct();
 
+    void __construct();
     void __destruct();
 
     void start();
-
     void connect();
 
-    void setEncryptionKey(Php::Parameters &params);
-
-    void setRemoteEndpoints(Php::Parameters &params);
-
-    void release();
+    void setConfig(Php::Parameters &params);
   
     Php::Value play(Php::Parameters &params);
     Php::Value playOnHold(Php::Parameters &params);
-
-    
     Php::Value setOutputFile(Php::Parameters &params);
     Php::Value unsetOutputFile();
 
 
+    Php::Value getVersion();
+    Php::Value getPreferredRelayID();
+    Php::Value getLastError();
+    Php::Value getStats();
+    Php::Value getDebugLog();
     Php::Value getDebugString();
-
-    void setNetworkType(Php::Parameters &params);
-
-    void setMicMute(Php::Parameters &params);
-    // jdouble recvTimeout, jdouble initTimeout, jint dataSavingMode, jboolean enableAEC, jboolean enableNS, jboolean enableAGC, jstring logFilePath
-    void setConfig(Php::Parameters &params);
-
     void debugCtl(Php::Parameters &params);
 
-    Php::Value getVersion();
-
-    Php::Value getPreferredRelayID();
-
-    Php::Value getLastError();
-
-    Php::Value getStats();
-
-    void setSharedConfig(Php::Parameters &params);
-
-    void setProxy(Php::Parameters &params);
-
-    Php::Value getDebugLog();
-
-    void updateConnectionState(int state);
 
     void setOutputLevel(Php::Parameters &params);
+    void setMicMute(Php::Parameters &params);
 
     Php::Value getState();
-
     Php::Value getOutputState();
     Php::Value getInputState();
-
     Php::Value getOutputParams();
     Php::Value getInputParams();
-
     Php::Value isPlaying();
-
-    /*
-    Php::Value madeline;
-    Php::Value current_call;
-    */
-
-
-    int state = STATE_CREATED;
+    Php::Value isDestroyed();
 
     AudioInputModule *in;
     AudioOutputModule *out;
 
+    int state = STATE_CREATED;
     int inputState = AUDIO_STATE_NONE;
     int outputState = AUDIO_STATE_NONE;
-    bool playing;
+    
+    bool playing = false;
+    bool destroyed = false;
+
   private:
+    void parseConfig();
+
+    Php::Value configuration;
     VoIPController *inst;
 };
 
