@@ -26,12 +26,12 @@ If not, see <http://www.gnu.org/licenses/>.
 #define AUDIO_STATE_CONFIGURED 1
 #define AUDIO_STATE_RUNNING 2
 
-#define CALL_STATE_NONE -1
 #define CALL_STATE_REQUESTED 0
-#define CALL_STATE_ACCEPTED 1
-#define CALL_STATE_CONFIRMED 2
-#define CALL_STATE_READY 3
-#define CALL_STATE_ENDED 4
+#define CALL_STATE_INCOMING 1
+#define CALL_STATE_ACCEPTED 2
+#define CALL_STATE_CONFIRMED 3
+#define CALL_STATE_READY 4
+#define CALL_STATE_ENDED 5
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
@@ -50,6 +50,9 @@ public:
   void __construct(Php::Parameters &params);
   void initVoIPController();
   void __destruct();
+  void discard();
+  void accept();
+  void deinitVoIPController();
   void __wakeup();
 
   void startTheMagic();

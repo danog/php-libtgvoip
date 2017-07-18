@@ -40,7 +40,8 @@ void VoIP::__construct(Php::Parameters &params)
     self["internalStorage"]["created"] = params[1];
     self["internalStorage"]["otherID"] = params[2];
     self["internalStorage"]["callID"] = params[3];
-    self["internalStorage"]["callState"] = CALL_STATE_NONE;
+    self["internalStorage"]["madeline"] = params[4];
+    self["internalStorage"]["callState"] = params[5];
 
     initVoIPController();
 }
@@ -53,17 +54,36 @@ void VoIP::initVoIPController() {
     inst->SetStateCallback([](VoIPController *controller, int state) {
         ((VoIP *)controller->implData)->state = state;
         if (state == STATE_FAILED) {
-            ((VoIP *)controller->implData)->__destruct();
+            ((VoIP *)controller->implData)->deinitVoIPController();
         }
     });
     inst->Start();
+}
 
+void VoIP::__destruct() {
+    discard();
 }
-void VoIP::__destruct()
+
+
+void VoIP::deinitVoIPController() {
+    if (inst) {
+        self["internalStorage"]["callState"] = CALL_STATE_ENDED;
+        delete inst;
+    }
+}
+
+void VoIP::discard()
 {
-    destroyed = true;
-    delete inst;
+    self["internalStorage"]["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value());
+    deinitVoIPController();
 }
+
+void VoIP::accept()
+{
+    self["internalStorage"]["madeline"].value().call("accept_call", self["internalStorage"]["callID"].value());
+    deinitVoIPController();
+}
+
 
 void VoIP::__wakeup()
 {
@@ -153,7 +173,7 @@ void VoIP::parseConfig() {
 
     char *key = (char *) malloc(256);
     memcpy(key, self["configuration"]["auth_key"], 256);
-    inst->SetEncryptionKey(key, (bool) self["configuration"]["outgoing"]);
+    inst->SetEncryptionKey(key, (bool) self["internalStorage"]["creator"]);
     free(key);
 
     vector<Endpoint> eps;
@@ -162,7 +182,6 @@ void VoIP::parseConfig() {
     {
         string ip = endpoints[i]["ip"];
         string ipv6 = endpoints[i]["ipv6"];
-        string peer_tag = endpoints[i]["peer_tag"];
 
         IPv4Address v4addr(ip);
         IPv6Address v6addr("::0");
@@ -173,9 +192,9 @@ void VoIP::parseConfig() {
             v6addr = IPv6Address(ipv6);
         }
 
-        if (peer_tag != "")
+        if (endpoints[i]["peer_tag"])
         {
-            memcpy(pTag, peer_tag.c_str(), 16);
+            memcpy(pTag, endpoints[i]["peer_tag"], 16);
         }
 
         eps.push_back(Endpoint(endpoints[i]["id"], (int32_t)endpoints[i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
@@ -265,11 +284,6 @@ Php::Value VoIP::getState()
     return state;
 }
 
-Php::Value VoIP::isDestroyed()
-{
-    return destroyed;
-}
-
 Php::Value VoIP::isPlaying()
 {
     return playing;
@@ -344,15 +358,16 @@ PHPCPP_EXPORT void *get_module()
     voip.method<&VoIP::isCreator>("isCreator", Php::Public | Php::Final);
     voip.method<&VoIP::whenCreated>("whenCreated", Php::Public | Php::Final);
     voip.method<&VoIP::isPlaying>("isPlaying", Php::Public | Php::Final);
-    voip.method<&VoIP::isDestroyed>("isDestroyed", Php::Public | Php::Final);
     voip.method<&VoIP::getOutputState>("getOutputState", Php::Public | Php::Final);
     voip.method<&VoIP::getInputState>("getInputState", Php::Public | Php::Final);
     voip.method<&VoIP::getOutputParams>("getOutputParams", Php::Public | Php::Final);
     voip.method<&VoIP::getInputParams>("getInputParams", Php::Public | Php::Final);
 
     voip.method<&VoIP::__destruct>("__destruct", Php::Public | Php::Final);
+    voip.method<&VoIP::discard>("discard", Php::Public | Php::Final);
+    voip.method<&VoIP::accept>("accept", Php::Public | Php::Final);
     voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final, {
-        Php::ByVal("creator", Php::Type::Bool), Php::ByVal("created", Php::Type::Numeric), Php::ByVal("otherID", Php::Type::Numeric), Php::ByVal("callID")
+        Php::ByVal("creator", Php::Type::Bool), Php::ByVal("created", Php::Type::Numeric), Php::ByVal("otherID", Php::Type::Numeric), Php::ByVal("callID"), Php::ByRef("madeline", Php::Type::Object), Php::ByVal("callState", Php::Type::Numeric)
     });
     voip.method<&VoIP::__wakeup>("__wakeup", Php::Public | Php::Final);
     voip.method<&VoIP::setMicMute>("setMicMute", Php::Public | Php::Final, {
@@ -419,8 +434,8 @@ PHPCPP_EXPORT void *get_module()
     voip.constant("AUDIO_STATE_CONFIGURED", AUDIO_STATE_CONFIGURED);
     voip.constant("AUDIO_STATE_RUNNING", AUDIO_STATE_RUNNING);
 
-    voip.constant("CALL_STATE_NONE", CALL_STATE_NONE);
     voip.constant("CALL_STATE_REQUESTED", CALL_STATE_REQUESTED);
+    voip.constant("CALL_STATE_INCOMING", CALL_STATE_INCOMING);
     voip.constant("CALL_STATE_ACCEPTED", CALL_STATE_ACCEPTED);
     voip.constant("CALL_STATE_CONFIRMED", CALL_STATE_CONFIRMED);
     voip.constant("CALL_STATE_READY", CALL_STATE_READY);
