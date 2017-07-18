@@ -40,15 +40,27 @@ void VoIP::__construct()
     inst->implData = (void *) this;
     inst->SetStateCallback([](VoIPController *controller, int state) {
         ((VoIP *)controller->implData)->state = state;
+        /*
         if (state == STATE_FAILED) {
             ((VoIP *)controller->implData)->__destruct();
-        }
+        }*/
     });
 }
 void VoIP::__destruct()
 {
     destroyed = true;
     delete inst;
+}
+
+void VoIP::__wakeup()
+{
+    __construct();
+    if (configuration) {
+        parseConfig();
+    }
+    if (proxyConfiguration) {
+        configureProxy();
+    }
 }
 
 
@@ -61,11 +73,23 @@ void VoIP::connect()
     inst->Connect();
 }
 
+Php::Value VoIP::getProxy() const
+{
+    return proxyConfiguration;
+}
+
+
+Php::Value VoIP::getConfig() const
+{
+    return configuration;
+}
+
 void VoIP::setConfig(Php::Parameters &params)
 {
     configuration = params[0];
     this->parseConfig();
 }
+
 void VoIP::parseConfig() {
     voip_config_t cfg;
     cfg.recv_timeout = configuration["config"]["recv_timeout"];
@@ -74,7 +98,9 @@ void VoIP::parseConfig() {
     cfg.enableAEC = configuration["config"]["enable_AEC"];
     cfg.enableNS = configuration["config"]["enable_NS"];
     cfg.enableAGC = configuration["config"]["enable_AGC"];
-    if (configuration["config"].contains("log_file_path"))
+
+    Php::Value log_file_path = "log_file_path";
+    if (configuration["config"].contains(log_file_path))
     {
         strncpy(cfg.logFilePath, configuration["config"]["log_file_path"], sizeof(cfg.logFilePath));
         cfg.logFilePath[sizeof(cfg.logFilePath) - 1] = 0;
@@ -83,8 +109,9 @@ void VoIP::parseConfig() {
     {
         memset(cfg.logFilePath, 0, sizeof(cfg.logFilePath));
     }
+    Php::Value stats_dump_file_path = "stats_dump_file_path";
 
-    if (configuration["config"].contains("stats_dump_file_path"))
+    if (configuration["config"].contains(stats_dump_file_path))
     {
         strncpy(cfg.statsDumpFilePath, configuration["config"]["stats_dump_file_path"], sizeof(cfg.statsDumpFilePath));
         cfg.statsDumpFilePath[sizeof(cfg.statsDumpFilePath) - 1] = 0;
@@ -94,7 +121,8 @@ void VoIP::parseConfig() {
         memset(cfg.statsDumpFilePath, 0, sizeof(cfg.statsDumpFilePath));
     }
     inst->SetConfig(&cfg);
-    ServerConfig::GetSharedInstance()->Update(configuration["shared_config"]);
+    Php::Value shared_config = configuration["shared_config"];
+    ServerConfig::GetSharedInstance()->Update(shared_config);
 
     char *key = (char *) malloc(256);
     memcpy(key, configuration["auth_key"], 256);
@@ -102,11 +130,12 @@ void VoIP::parseConfig() {
     free(key);
 
     vector<Endpoint> eps;
-    for (int i = 0; i < configuration["endpoints"].size(); i++)
+    Php::Value endpoints = configuration["endpoints"];
+    for (int i = 0; i < endpoints.size(); i++)
     {
-        string ip = configuration["endpoints"][i]["ip"];
-        string ipv6 = configuration["endpoints"][i]["ipv6"];
-        string peer_tag = configuration["endpoints"][i]["peer_tag"];
+        string ip = endpoints[i]["ip"];
+        string ipv6 = endpoints[i]["ipv6"];
+        string peer_tag = endpoints[i]["peer_tag"];
 
         IPv4Address v4addr(ip);
         IPv6Address v6addr("::0");
@@ -122,7 +151,7 @@ void VoIP::parseConfig() {
             memcpy(pTag, peer_tag.c_str(), 16);
         }
 
-        eps.push_back(Endpoint(configuration["endpoints"][i]["id"], (int32_t)configuration["endpoints"][i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
+        eps.push_back(Endpoint(endpoints[i]["id"], (int32_t)endpoints[i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
         free(pTag);
     }
     
@@ -154,8 +183,15 @@ void VoIP::setMicMute(Php::Parameters &params)
 // int protocol, string address, uint16_t port, string username, string password
 void VoIP::setProxy(Php::Parameters &params)
 {
-    inst->SetProxy(params[0], params[1], (int32_t) params[2], params[3], params[4]);
+    proxyConfiguration = params[0];
+    configureProxy();
 }
+
+void VoIP::configureProxy()
+{
+    inst->SetProxy(proxyConfiguration["protocol"], proxyConfiguration["address"], (int32_t) proxyConfiguration["port"], proxyConfiguration["username"], proxyConfiguration["password"]);
+}
+
 void VoIP::debugCtl(Php::Parameters &params)
 {
     inst->DebugCtl(params[0], params[1]);
@@ -281,18 +317,6 @@ PHPCPP_EXPORT void *get_module()
     // description of the class so that PHP knows which methods are accessible
     Php::Class<VoIP> voip("VoIP");
 
-    /*
-    voip.method("setState", {
-        Php::ByVal("state", Php::Type::Numeric),
-    });
-
-    voip.method("startOutput");
-    voip.method("stopOutput");
-    voip.method("stopInput");
-    voip.method("getOutputLevel");
-    */
-
-
     voip.method<&VoIP::getState>("getState", Php::Public | Php::Final);
     voip.method<&VoIP::isPlaying>("isPlaying", Php::Public | Php::Final);
     voip.method<&VoIP::isDestroyed>("isDestroyed", Php::Public | Php::Final);
@@ -303,9 +327,7 @@ PHPCPP_EXPORT void *get_module()
 
     voip.method<&VoIP::__destruct>("__destruct", Php::Public | Php::Final);
     voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final);
-    voip.method<&VoIP::setEncryptionKey>("setOutputLevel", Php::Public | Php::Final, {
-        Php::ByVal("level", Php::Type::Float),
-    });
+    voip.method<&VoIP::__wakeup>("__wakeup", Php::Public | Php::Final);
     voip.method<&VoIP::setMicMute>("setMicMute", Php::Public | Php::Final, {
         Php::ByVal("type", Php::Type::Bool),
     });
@@ -316,8 +338,7 @@ PHPCPP_EXPORT void *get_module()
         Php::ByVal("config", Php::Type::Array),
     });
     voip.method<&VoIP::setProxy>("setProxy", Php::Public | Php::Final, {
-        // int protocol, string address, uint16_t port, string username, string password
-        Php::ByVal("protocol", Php::Type::Numeric), Php::ByVal("address", Php::Type::String), Php::ByVal("port", Php::Type::Numeric), Php::ByVal("username", Php::Type::String), Php::ByVal("password", Php::Type::String),
+        Php::ByVal("proxyConfiguration", Php::Type::Array),
     });
     voip.method<&VoIP::getDebugLog>("getDebugLog", Php::Public | Php::Final);
     voip.method<&VoIP::getLastError>("getLastError", Php::Public | Php::Final);
@@ -334,6 +355,10 @@ PHPCPP_EXPORT void *get_module()
     
     voip.method<&VoIP::setOutputFile>("setOutputFile", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
     voip.method<&VoIP::unsetOutputFile>("unsetOutputFile", Php::Public | Php::Final);
+
+
+    voip.property("configuration", &VoIP::getConfig, Php::Private);
+    voip.property("proxyConfiguration", &VoIP::getProxy, Php::Private);
 
     voip.constant("STATE_CREATED", STATE_CREATED);
     voip.constant("STATE_WAIT_INIT", STATE_WAIT_INIT);

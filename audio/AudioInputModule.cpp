@@ -33,12 +33,10 @@ AudioInputModule::~AudioInputModule()
 
 	while (holdFiles.size()) {
         fclose(holdFiles.front());
-        delete holdFiles.front();
         holdFiles.pop();
     }
 	while (inputFiles.size()) {
         fclose(inputFiles.front());
-        delete inputFiles.front();
         inputFiles.pop();
     }
 
@@ -85,7 +83,6 @@ bool AudioInputModule::playOnHold(Php::Parameters &params) {
     lock_mutex(inputMutex);
     while (holdFiles.size()) {
         fclose(holdFiles.front());
-        delete holdFiles.front();
         holdFiles.pop();
     }
     for (int i = 0; i < params[0].size(); i++) {

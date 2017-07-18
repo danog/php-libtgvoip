@@ -39,12 +39,17 @@ class VoIP : public Php::Base
 
     void __construct();
     void __destruct();
+    void __wakeup();
 
     void start();
     void connect();
 
+    Php::Value getConfig() const;
     void setConfig(Php::Parameters &params);
-  
+
+    Php::Value getProxy() const;
+    void setProxy(Php::Parameters &params);
+
     Php::Value play(Php::Parameters &params);
     Php::Value playOnHold(Php::Parameters &params);
     Php::Value setOutputFile(Php::Parameters &params);
@@ -83,7 +88,9 @@ class VoIP : public Php::Base
 
   private:
     void parseConfig();
-
+    void configureProxy();
+    
+    Php::Value proxyConfiguration;
     Php::Value configuration;
     VoIPController *inst;
 };
