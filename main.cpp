@@ -41,7 +41,7 @@ void VoIP::__construct(Php::Parameters &params)
     self["internalStorage"]["otherID"] = params[2];
     self["internalStorage"]["callID"] = params[3];
     self["internalStorage"]["madeline"] = params[4];
-    self["internalStorage"]["callState"] = params[5];
+    self["internalStorage"]["callState"] = (int) params[5];
 
     initVoIPController();
 }
@@ -62,6 +62,7 @@ void VoIP::initVoIPController() {
 
 void VoIP::deinitVoIPController() {
     if (inst) {
+        Php::Value self(this);
         self["internalStorage"]["callState"] = CALL_STATE_ENDED;
         delete inst;
     }
@@ -69,12 +70,14 @@ void VoIP::deinitVoIPController() {
 
 void VoIP::discard()
 {
+    Php::Value self(this);
     self["internalStorage"]["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value());
     deinitVoIPController();
 }
 
 void VoIP::accept()
 {
+    Php::Value self(this);
     self["internalStorage"]["madeline"].value().call("accept_call", self["internalStorage"]["callID"].value());
     deinitVoIPController();
 }
@@ -98,32 +101,41 @@ void VoIP::startTheMagic()
 
 Php::Value VoIP::whenCreated()
 {
+
+    Php::Value self(this);
     return self["internalStorage"]["created"];
 }
 Php::Value VoIP::isCreator()
 {
+
+    Php::Value self(this);
     return self["internalStorage"]["creator"];
 }
 Php::Value VoIP::getOtherID()
 {
+    Php::Value self(this);
     return self["internalStorage"]["otherID"];
 }
 Php::Value VoIP::getCallID()
 {
+    Php::Value self(this);
     return self["internalStorage"]["callID"];
 }
 
 Php::Value VoIP::getCallState()
 {
+    Php::Value self(this);
     return self["internalStorage"]["callState"];
 }
 void VoIP::setCallState(Php::Parameters &params)
 {
+    Php::Value self(this);
     self["internalStorage"]["callState"] = params[0];
 }
 
 Php::Value VoIP::getVisualization()
 {
+    Php::Value self(this);
     if (self["internalStorage"]["visualization"]) {
         return self["internalStorage"]["visualization"];
     }
@@ -131,10 +143,12 @@ Php::Value VoIP::getVisualization()
 }
 void VoIP::setVisualization(Php::Parameters &params)
 {
+    Php::Value self(this);
     self["internalStorage"]["visualization"] = params[0];
 }
 
 void VoIP::parseConfig() {
+    Php::Value self(this);
     voip_config_t cfg;
     cfg.recv_timeout = (double) self["configuration"]["config"]["recv_timeout"];
     cfg.init_timeout = (double) self["configuration"]["config"]["init_timeout"];

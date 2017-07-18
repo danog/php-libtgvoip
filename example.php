@@ -9,6 +9,9 @@ See the GNU Affero General Public License for more details.
 You should have received a copy of the GNU General Public License along with php-libtgvoip.
 If not, see <http://www.gnu.org/licenses/>.
 */
+class a {}
+$l = new a;
 
-$VoIP = new \danog\MadelineProto\VoIP(true, time(), 10103, 14918248912498);
+$VoIP = new \danog\MadelineProto\VoIP(true, time(), 10103, 14918248912498, $l, -22);
 var_dump($VoIP);
+var_dump($VoIP->getCallState());

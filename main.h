@@ -26,7 +26,7 @@ If not, see <http://www.gnu.org/licenses/>.
 #define AUDIO_STATE_CONFIGURED 1
 #define AUDIO_STATE_RUNNING 2
 
-#define CALL_STATE_REQUESTED 0
+#define CALL_STATE_REQUESTED -1
 #define CALL_STATE_INCOMING 1
 #define CALL_STATE_ACCEPTED 2
 #define CALL_STATE_CONFIRMED 3
@@ -102,9 +102,6 @@ public:
   void parseConfig();
   void parseProxyConfig();
 private:
-
-  Php::Value self;
-
   VoIPController *inst;
 };
 
