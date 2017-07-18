@@ -49,7 +49,6 @@ class VoIP : public Php::Base
 public:
   void __construct(Php::Parameters &params);
   void initVoIPController();
-  void __destruct();
   void discard();
   void accept();
   void deinitVoIPController();

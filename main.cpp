@@ -60,11 +60,6 @@ void VoIP::initVoIPController() {
     inst->Start();
 }
 
-void VoIP::__destruct() {
-    discard();
-}
-
-
 void VoIP::deinitVoIPController() {
     if (inst) {
         self["internalStorage"]["callState"] = CALL_STATE_ENDED;
@@ -363,7 +358,7 @@ PHPCPP_EXPORT void *get_module()
     voip.method<&VoIP::getOutputParams>("getOutputParams", Php::Public | Php::Final);
     voip.method<&VoIP::getInputParams>("getInputParams", Php::Public | Php::Final);
 
-    voip.method<&VoIP::__destruct>("__destruct", Php::Public | Php::Final);
+    voip.method<&VoIP::discard>("__destruct", Php::Public | Php::Final);
     voip.method<&VoIP::discard>("discard", Php::Public | Php::Final);
     voip.method<&VoIP::accept>("accept", Php::Public | Php::Final);
     voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final, {
