@@ -26,73 +26,84 @@ If not, see <http://www.gnu.org/licenses/>.
 #define AUDIO_STATE_CONFIGURED 1
 #define AUDIO_STATE_RUNNING 2
 
+#define CALL_STATE_NONE -1
+#define CALL_STATE_REQUESTED 0
+#define CALL_STATE_ACCEPTED 1
+#define CALL_STATE_CONFIRMED 2
+#define CALL_STATE_READY 3
+#define CALL_STATE_ENDED 4
+
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-namespace tgvoip{ namespace audio{
+namespace tgvoip
+{
+namespace audio
+{
 class AudioInputModule;
 class AudioOutputModule;
-}}
+}
+}
 class VoIP : public Php::Base
 {
-  public:
+public:
+  void __construct(Php::Parameters &params);
+  void initVoIPController();
+  void __destruct();
+  void __wakeup();
 
-    void __construct();
-    void __destruct();
-    void __wakeup();
+  void startTheMagic();
 
-    void start();
-    void connect();
+  Php::Value getVisualization();
+  void setVisualization(Php::Parameters &params);
 
-    Php::Value getConfig() const;
-    void setConfig(Php::Parameters &params);
+  Php::Value play(Php::Parameters &params);
+  Php::Value playOnHold(Php::Parameters &params);
+  Php::Value setOutputFile(Php::Parameters &params);
+  Php::Value unsetOutputFile();
 
-    Php::Value getProxy() const;
-    void setProxy(Php::Parameters &params);
+  Php::Value getVersion();
+  Php::Value getPreferredRelayID();
+  Php::Value getLastError();
+  Php::Value getStats();
+  Php::Value getDebugLog();
+  Php::Value getDebugString();
+  void debugCtl(Php::Parameters &params);
 
-    Php::Value play(Php::Parameters &params);
-    Php::Value playOnHold(Php::Parameters &params);
-    Php::Value setOutputFile(Php::Parameters &params);
-    Php::Value unsetOutputFile();
+  void setOutputLevel(Php::Parameters &params);
+  void setMicMute(Php::Parameters &params);
 
+  Php::Value getState();
+  Php::Value getOutputState();
+  Php::Value getInputState();
+  Php::Value getOutputParams();
+  Php::Value getInputParams();
+  Php::Value isPlaying();
+  Php::Value isDestroyed();
+  Php::Value whenCreated();
+  Php::Value isCreator();
+  Php::Value getOtherID();
+  Php::Value getCallID();
+  Php::Value getCallState();
+  void setCallState(Php::Parameters &params);
 
-    Php::Value getVersion();
-    Php::Value getPreferredRelayID();
-    Php::Value getLastError();
-    Php::Value getStats();
-    Php::Value getDebugLog();
-    Php::Value getDebugString();
-    void debugCtl(Php::Parameters &params);
+  AudioInputModule *in;
+  AudioOutputModule *out;
 
+  int state = STATE_CREATED;
+  int inputState = AUDIO_STATE_NONE;
+  int outputState = AUDIO_STATE_NONE;
 
-    void setOutputLevel(Php::Parameters &params);
-    void setMicMute(Php::Parameters &params);
+  bool playing = false;
+  bool destroyed = false;
 
-    Php::Value getState();
-    Php::Value getOutputState();
-    Php::Value getInputState();
-    Php::Value getOutputParams();
-    Php::Value getInputParams();
-    Php::Value isPlaying();
-    Php::Value isDestroyed();
+  void parseConfig();
+  void parseProxyConfig();
+private:
 
-    AudioInputModule *in;
-    AudioOutputModule *out;
+  Php::Value self;
 
-    int state = STATE_CREATED;
-    int inputState = AUDIO_STATE_NONE;
-    int outputState = AUDIO_STATE_NONE;
-    
-    bool playing = false;
-    bool destroyed = false;
-
-  private:
-    void parseConfig();
-    void configureProxy();
-    
-    Php::Value proxyConfiguration;
-    Php::Value configuration;
-    VoIPController *inst;
+  VoIPController *inst;
 };
 
 #endif

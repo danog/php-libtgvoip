@@ -27,9 +27,10 @@ AudioOutputModule::~AudioOutputModule()
 {
 	wrapper->outputState = AUDIO_STATE_NONE;
 	wrapper->out = NULL;
-
-	LOGD("before join receiverThread");
-	join_thread(receiverThread);
+	if (receiverThread) {
+		LOGD("before join receiverThread");
+		join_thread(receiverThread);
+	}
 
 	this->unsetOutputFile();
     free_mutex(outputMutex);

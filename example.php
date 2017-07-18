@@ -10,6 +10,5 @@ You should have received a copy of the GNU General Public License along with php
 If not, see <http://www.gnu.org/licenses/>.
 */
 
-$VoIP = new \danog\MadelineProto\VoIP();
-
+$VoIP = new \danog\MadelineProto\VoIP(true, time(), 10103, 14918248912498);
 var_dump($VoIP);

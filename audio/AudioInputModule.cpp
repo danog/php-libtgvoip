@@ -28,8 +28,10 @@ AudioInputModule::~AudioInputModule()
 	wrapper->inputState = AUDIO_STATE_NONE;
 	wrapper->in = NULL;
 
-	LOGD("before join senderThread");
-	join_thread(senderThread);
+	if (senderThread) {
+		LOGD("before join senderThread");
+		join_thread(senderThread);
+	}
 
 	while (holdFiles.size()) {
         fclose(holdFiles.front());
