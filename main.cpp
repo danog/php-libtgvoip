@@ -42,6 +42,7 @@ void VoIP::__construct(Php::Parameters &params)
     self["internalStorage"]["callID"] = params[3];
     self["internalStorage"]["madeline"] = params[4];
     self["internalStorage"]["callState"] = (int) params[5];
+    self["internalStorage"]["protocol"] = params[6];
 
     initVoIPController();
 }
@@ -115,6 +116,11 @@ Php::Value VoIP::getOtherID()
 {
     Php::Value self(this);
     return self["internalStorage"]["otherID"];
+}
+Php::Value VoIP::getProtocol()
+{
+    Php::Value self(this);
+    return self["internalStorage"]["protocol"];
 }
 Php::Value VoIP::getCallID()
 {
@@ -191,6 +197,7 @@ void VoIP::parseConfig() {
     {
         string ip = endpoints[i]["ip"];
         string ipv6 = endpoints[i]["ipv6"];
+        string peer_tag = endpoints[i]["peer_tag"];
 
         IPv4Address v4addr(ip);
         IPv6Address v6addr("::0");
@@ -201,16 +208,16 @@ void VoIP::parseConfig() {
             v6addr = IPv6Address(ipv6);
         }
 
-        if (endpoints[i]["peer_tag"])
+        if (peer_tag != "")
         {
-            memcpy(pTag, endpoints[i]["peer_tag"], 16);
+            memcpy(pTag, peer_tag.c_str(), 16);
         }
 
         eps.push_back(Endpoint(endpoints[i]["id"], (int32_t)endpoints[i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
         free(pTag);
     }
     
-    inst->SetRemoteEndpoints(eps, self["configuration"]["allow_p2p"]);
+    inst->SetRemoteEndpoints(eps, (bool) self["internalStorage"]["protocol"]["udp_p2p"]);
     inst->SetNetworkType(self["configuration"]["network_type"]);
     if (self["configuration"]["proxy"]) {
         inst->SetProxy(self["configuration"]["proxy"]["protocol"], self["configuration"]["proxy"]["address"], (int32_t) self["configuration"]["proxy"]["port"], self["configuration"]["proxy"]["username"], self["configuration"]["proxy"]["password"]);
@@ -361,8 +368,11 @@ PHPCPP_EXPORT void *get_module()
 
     voip.method<&VoIP::getState>("getState", Php::Public | Php::Final);
     voip.method<&VoIP::getCallState>("getCallState", Php::Public | Php::Final);
-    voip.method<&VoIP::setCallState>("setCallState", Php::Public | Php::Final);
+    voip.method<&VoIP::setCallState>("setCallState", Php::Public | Php::Final, {Php::ByVal("state", Php::Type::Numeric)});
+    voip.method<&VoIP::getVisualization>("getVisualization", Php::Public | Php::Final);
+    voip.method<&VoIP::setVisualization>("setVisualization", Php::Public | Php::Final, {Php::ByVal("visualization", Php::Type::String)});
     voip.method<&VoIP::getOtherID>("getOtherID", Php::Public | Php::Final);
+    voip.method<&VoIP::getProtocol>("getProtocol", Php::Public | Php::Final);
     voip.method<&VoIP::getCallID>("getCallID", Php::Public | Php::Final);
     voip.method<&VoIP::isCreator>("isCreator", Php::Public | Php::Final);
     voip.method<&VoIP::whenCreated>("whenCreated", Php::Public | Php::Final);
@@ -376,7 +386,7 @@ PHPCPP_EXPORT void *get_module()
     voip.method<&VoIP::discard>("discard", Php::Public | Php::Final);
     voip.method<&VoIP::accept>("accept", Php::Public | Php::Final);
     voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final, {
-        Php::ByVal("creator", Php::Type::Bool), Php::ByVal("created", Php::Type::Numeric), Php::ByVal("otherID", Php::Type::Numeric), Php::ByVal("callID"), Php::ByRef("madeline", Php::Type::Object), Php::ByVal("callState", Php::Type::Numeric)
+        Php::ByVal("creator", Php::Type::Bool), Php::ByVal("created", Php::Type::Numeric), Php::ByVal("otherID", Php::Type::Numeric), Php::ByVal("callID"), Php::ByRef("madeline", Php::Type::Object), Php::ByVal("callState", Php::Type::Numeric), Php::ByVal("protocol", Php::Type::Array)
     });
     voip.method<&VoIP::__wakeup>("__wakeup", Php::Public | Php::Final);
     voip.method<&VoIP::setMicMute>("setMicMute", Php::Public | Php::Final, {

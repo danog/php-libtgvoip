@@ -51,7 +51,7 @@ private:
 
     FILE *outputFile;
     tgvoip_mutex_t outputMutex;
-
+	
     bool configuringOutput;
 
 };
