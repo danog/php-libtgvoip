@@ -90,7 +90,6 @@ public:
   Php::Value getOtherID();
   Php::Value getCallID();
   Php::Value getCallState();
-  void setCallState(Php::Parameters &params);
 
   AudioInputModule *in;
   AudioOutputModule *out;

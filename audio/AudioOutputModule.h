@@ -27,14 +27,10 @@ class AudioOutputModule : public AudioOutput
 	virtual void Stop();
 	virtual bool IsPlaying() override;
 	virtual float GetLevel() override;
-	unsigned char *readSamples();
 	static void EnumerateDevices(std::vector<AudioOutputDevice> &devs);
 
 	static void *StartReceiverThread(void *output);
 	void RunReceiverThread();
-
-	bool unsetOutputFile();
-	bool setOutputFile(const char *file);
 
 	int outputBitsPerSample;
 	int outputSampleRate;

@@ -51,8 +51,8 @@ void VoIP::initVoIPController() {
     inst = new VoIPController();
 
     outputFile=NULL;
-	configuringOutput = false;
-	init_mutex(outputMutex);
+    configuringOutput = false;
+    init_mutex(outputMutex);
     init_mutex(inputMutex);
     configuringInput = false;
 
@@ -93,27 +93,30 @@ void VoIP::deinitVoIPController() {
 
 void VoIP::discard(Php::Parameters &params)
 {
-    deinitVoIPController();
-
     Php::Value self(this);
     Php::Array reason;
     Php::Array rating;
+    Php::Value debug;
     if (params.size() > 0) {
         reason = params[0];
     } else {
         reason["_"] = "phoneCallDiscardReasonDisconnect";
     }
-    if (params.size() == 2) {
+    if (params.size() > 1) {
         rating = params[1];
     }
-    self["internalStorage"]["madeline"].value().call("discard_call", self["internalStorage"]["callID"]["id"].value(), reason, rating);
+    if (params.size() > 2) {
+        debug = params[2];
+    } else debug = true;
+    self["internalStorage"]["madeline"].value().call("discard_call", self["internalStorage"]["callID"]["id"].value(), reason, rating, debug);
+    deinitVoIPController();
 }
 
 void VoIP::accept()
 {
     Php::Value self(this);
     self["internalStorage"]["madeline"].value().call("accept_call", self["internalStorage"]["callID"]["id"].value());
-    deinitVoIPController();
+    callState = CALL_STATE_READY;
 }
 
 
@@ -177,10 +180,6 @@ Php::Value VoIP::getCallID()
 Php::Value VoIP::getCallState()
 {
     return callState;
-}
-void VoIP::setCallState(Php::Parameters &params)
-{
-    callState = params[0];
 }
 
 Php::Value VoIP::getVisualization()
@@ -276,13 +275,13 @@ Php::Value VoIP::unsetOutputFile() {
 
     configuringOutput = true;
     lock_mutex(outputMutex);
-	fflush(outputFile);
+    fflush(outputFile);
     fclose(outputFile);
     outputFile = NULL;
     configuringOutput = false;
     unlock_mutex(outputMutex);
     
-    return true;
+    return this;
 
 }
 Php::Value VoIP::setOutputFile(Php::Parameters &params) {
@@ -302,7 +301,7 @@ Php::Value VoIP::setOutputFile(Php::Parameters &params) {
     }
     configuringOutput = false;
     unlock_mutex(outputMutex);
-    return true;
+    return this;
 }
 
 
@@ -343,7 +342,7 @@ Php::Value VoIP::playOnHold(Php::Parameters &params) {
     }
     configuringInput = false;
     unlock_mutex(inputMutex);
-    return true;
+    return this;
 }
 
 void VoIP::setMicMute(Php::Parameters &params)
@@ -479,7 +478,6 @@ PHPCPP_EXPORT void *get_module()
 
     voip.method<&VoIP::getState>("getState", Php::Public | Php::Final);
     voip.method<&VoIP::getCallState>("getCallState", Php::Public | Php::Final);
-    voip.method<&VoIP::setCallState>("setCallState", Php::Public | Php::Final, {Php::ByVal("state", Php::Type::Numeric)});
     voip.method<&VoIP::getVisualization>("getVisualization", Php::Public | Php::Final);
     voip.method<&VoIP::setVisualization>("setVisualization", Php::Public | Php::Final, {Php::ByVal("visualization", Php::Type::Array)});
     voip.method<&VoIP::getOtherID>("getOtherID", Php::Public | Php::Final);
