@@ -26,7 +26,8 @@ If not, see <http://www.gnu.org/licenses/>.
 #define AUDIO_STATE_CONFIGURED 1
 #define AUDIO_STATE_RUNNING 2
 
-#define CALL_STATE_REQUESTED -1
+#define CALL_STATE_NONE -1
+#define CALL_STATE_REQUESTED 0
 #define CALL_STATE_INCOMING 1
 #define CALL_STATE_ACCEPTED 2
 #define CALL_STATE_CONFIRMED 3
@@ -49,10 +50,11 @@ class VoIP : public Php::Base
 public:
   void __construct(Php::Parameters &params);
   void initVoIPController();
-  void discard();
+  void discard(Php::Parameters &params);
   void accept();
   void deinitVoIPController();
   void __wakeup();
+  void __sleep();
 
   void startTheMagic();
 
@@ -103,6 +105,7 @@ public:
   void parseConfig();
   void parseProxyConfig();
 private:
+  int callState = CALL_STATE_NONE;
   VoIPController *inst;
 };
 

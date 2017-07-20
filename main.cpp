@@ -37,12 +37,11 @@ void VoIP::__construct(Php::Parameters &params)
     self["internalStorage"] = empty;
 
     self["internalStorage"]["creator"] = params[0];
-    self["internalStorage"]["created"] = params[1];
-    self["internalStorage"]["otherID"] = params[2];
-    self["internalStorage"]["callID"] = params[3];
-    self["internalStorage"]["madeline"] = params[4];
-    self["internalStorage"]["callState"] = (int) params[5];
-    self["internalStorage"]["protocol"] = params[6];
+    self["internalStorage"]["otherID"] = params[1];
+    self["internalStorage"]["callID"] = params[2];
+    self["internalStorage"]["madeline"] = params[3];
+    callState = (int) params[4];
+    self["internalStorage"]["protocol"] = params[5];
 
     initVoIPController();
 }
@@ -62,24 +61,34 @@ void VoIP::initVoIPController() {
 }
 
 void VoIP::deinitVoIPController() {
-    if (inst) {
-        Php::Value self(this);
-        self["internalStorage"]["callState"] = CALL_STATE_ENDED;
+    if (callState != CALL_STATE_ENDED) {
+        callState = CALL_STATE_ENDED;
         delete inst;
     }
 }
 
-void VoIP::discard()
+void VoIP::discard(Php::Parameters &params)
 {
-    Php::Value self(this);
-    self["internalStorage"]["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value());
     deinitVoIPController();
+
+    Php::Value self(this);
+    Php::Array reason;
+    Php::Array rating;
+    if (params.size() > 0) {
+        reason = params[0];
+    } else {
+        reason["_"] = "phoneCallDiscardReasonDisconnect";
+    }
+    if (params.size() == 2) {
+        rating = params[1];
+    }
+    self["internalStorage"]["madeline"].value().call("discard_call", self["internalStorage"]["callID"]["id"].value(), reason, rating);
 }
 
 void VoIP::accept()
 {
     Php::Value self(this);
-    self["internalStorage"]["madeline"].value().call("accept_call", self["internalStorage"]["callID"].value());
+    self["internalStorage"]["madeline"].value().call("accept_call", self["internalStorage"]["callID"]["id"].value());
     deinitVoIPController();
 }
 
@@ -87,24 +96,37 @@ void VoIP::accept()
 void VoIP::__wakeup()
 {
     Php::Value self(this);
-
+    callState = self["internalStorage"]["callState"];
     initVoIPController();
     if (self["configuration"]) {
         parseConfig();
     }
 }
 
+void VoIP::__sleep()
+{
+    Php::Value self(this);
+    self["internalStorage"]["callState"] = callState;
+    Php::Array res({"internalStorage", "storage", "configuration"});
+}
+
 
 void VoIP::startTheMagic()
 {
     inst->Connect();
+    Php::Value self(this);
+    self["internalStorage"]["created"] = time(NULL);
+    callState = CALL_STATE_READY;
 }
 
 Php::Value VoIP::whenCreated()
 {
 
     Php::Value self(this);
-    return self["internalStorage"]["created"];
+    if (self["internalStorage"]["created"]) {
+        return self["internalStorage"]["created"];
+    }
+    return false;
 }
 Php::Value VoIP::isCreator()
 {
@@ -130,13 +152,11 @@ Php::Value VoIP::getCallID()
 
 Php::Value VoIP::getCallState()
 {
-    Php::Value self(this);
-    return self["internalStorage"]["callState"];
+    return callState;
 }
 void VoIP::setCallState(Php::Parameters &params)
 {
-    Php::Value self(this);
-    self["internalStorage"]["callState"] = params[0];
+    callState = params[0];
 }
 
 Php::Value VoIP::getVisualization()
@@ -253,7 +273,12 @@ void VoIP::debugCtl(Php::Parameters &params)
 
 Php::Value VoIP::getDebugLog()
 {
-    return inst->GetDebugLog();
+    Php::Value data;
+    string encoded = inst->GetDebugLog();
+    if (!encoded.empty()) {
+        data = Php::call("json_decode", encoded, true);
+    }
+    return data;
 }
 
 Php::Value VoIP::getVersion()
@@ -370,7 +395,7 @@ PHPCPP_EXPORT void *get_module()
     voip.method<&VoIP::getCallState>("getCallState", Php::Public | Php::Final);
     voip.method<&VoIP::setCallState>("setCallState", Php::Public | Php::Final, {Php::ByVal("state", Php::Type::Numeric)});
     voip.method<&VoIP::getVisualization>("getVisualization", Php::Public | Php::Final);
-    voip.method<&VoIP::setVisualization>("setVisualization", Php::Public | Php::Final, {Php::ByVal("visualization", Php::Type::String)});
+    voip.method<&VoIP::setVisualization>("setVisualization", Php::Public | Php::Final, {Php::ByVal("visualization", Php::Type::Array)});
     voip.method<&VoIP::getOtherID>("getOtherID", Php::Public | Php::Final);
     voip.method<&VoIP::getProtocol>("getProtocol", Php::Public | Php::Final);
     voip.method<&VoIP::getCallID>("getCallID", Php::Public | Php::Final);
@@ -383,12 +408,13 @@ PHPCPP_EXPORT void *get_module()
     voip.method<&VoIP::getInputParams>("getInputParams", Php::Public | Php::Final);
 
     voip.method<&VoIP::discard>("__destruct", Php::Public | Php::Final);
-    voip.method<&VoIP::discard>("discard", Php::Public | Php::Final);
+    voip.method<&VoIP::discard>("discard", Php::Public | Php::Final, {Php::ByVal("reason", Php::Type::Array, false), Php::ByVal("rating", Php::Type::Array, false)});
     voip.method<&VoIP::accept>("accept", Php::Public | Php::Final);
     voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final, {
-        Php::ByVal("creator", Php::Type::Bool), Php::ByVal("created", Php::Type::Numeric), Php::ByVal("otherID", Php::Type::Numeric), Php::ByVal("callID"), Php::ByRef("madeline", Php::Type::Object), Php::ByVal("callState", Php::Type::Numeric), Php::ByVal("protocol", Php::Type::Array)
+        Php::ByVal("creator", Php::Type::Bool), Php::ByVal("otherID", Php::Type::Numeric), Php::ByVal("InputPhoneCall", Php::Type::Array), Php::ByRef("madeline", Php::Type::Object), Php::ByVal("callState", Php::Type::Numeric), Php::ByVal("protocol", Php::Type::Array)
     });
     voip.method<&VoIP::__wakeup>("__wakeup", Php::Public | Php::Final);
+    voip.method<&VoIP::__sleep>("__sleep", Php::Public | Php::Final);
     voip.method<&VoIP::setMicMute>("setMicMute", Php::Public | Php::Final, {
         Php::ByVal("type", Php::Type::Bool),
     });
