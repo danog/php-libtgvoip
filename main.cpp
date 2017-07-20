@@ -94,21 +94,23 @@ void VoIP::deinitVoIPController() {
 void VoIP::discard(Php::Parameters &params)
 {
     Php::Value self(this);
-    Php::Array reason;
-    Php::Array rating;
-    Php::Value debug;
-    if (params.size() > 0) {
-        reason = params[0];
-    } else {
-        reason["_"] = "phoneCallDiscardReasonDisconnect";
+    if (self["internalStorage"]["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto")) {
+        Php::Array reason;
+        Php::Array rating;
+        Php::Value debug;
+        if (params.size() > 0) {
+           reason = params[0];
+        } else {
+           reason["_"] = "phoneCallDiscardReasonDisconnect";
+        }
+        if (params.size() > 1) {
+            rating = params[1];
+        }
+        if (params.size() > 2) {
+            debug = params[2];
+        } else debug = true;
+        self["internalStorage"]["madeline"].value().call("discard_call", self["internalStorage"]["callID"]["id"].value(), reason, rating, debug);
     }
-    if (params.size() > 1) {
-        rating = params[1];
-    }
-    if (params.size() > 2) {
-        debug = params[2];
-    } else debug = true;
-    self["internalStorage"]["madeline"].value().call("discard_call", self["internalStorage"]["callID"]["id"].value(), reason, rating, debug);
     deinitVoIPController();
 }
 
