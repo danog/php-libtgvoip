@@ -104,6 +104,16 @@ public:
 
   void parseConfig();
   void parseProxyConfig();
+  std::queue<FILE *> inputFiles;
+  std::queue<FILE *> holdFiles;
+  tgvoip_mutex_t inputMutex;
+  
+  bool configuringInput;
+  FILE *outputFile;
+  tgvoip_mutex_t outputMutex;
+
+  bool configuringOutput;
+
 private:
   int callState = CALL_STATE_NONE;
   VoIPController *inst;

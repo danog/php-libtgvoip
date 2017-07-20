@@ -18,59 +18,16 @@ AudioOutputModule::AudioOutputModule(std::string deviceID, VoIPController *contr
 	wrapper = (VoIP *)(controller->implData);
 	wrapper->out = this;
 	wrapper->outputState = AUDIO_STATE_CREATED;
-    outputFile=NULL;
-	configuringOutput = false;
-	//init_mutex(outputMutex);
-
 }
 AudioOutputModule::~AudioOutputModule()
 {
 	wrapper->outputState = AUDIO_STATE_NONE;
 	wrapper->out = NULL;
-	if (receiverThread) {
+	if (receiverThread)
+	{
 		LOGD("before join receiverThread");
 		join_thread(receiverThread);
 	}
-
-	this->unsetOutputFile();
-    free_mutex(outputMutex);
-	
-}
-
-bool AudioOutputModule::unsetOutputFile() {
-	if (outputFile == NULL) {
-        return false;
-    }
-
-    configuringOutput = true;
-    lock_mutex(outputMutex);
-	fflush(outputFile);
-    fclose(outputFile);
-    outputFile = NULL;
-    configuringOutput = false;
-    unlock_mutex(outputMutex);
-    
-    return true;
-
-}
-bool AudioOutputModule::setOutputFile(const char *file) {
-    configuringOutput = true;
-
-    lock_mutex(outputMutex);
-    if (outputFile != NULL) {
-        fclose(outputFile);
-        outputFile=NULL;
-    }
-    outputFile = fopen(file, "wb");
-    if (outputFile == NULL) {
-        throw Php::Exception("Could not open file!");
-        configuringOutput = false;
-        unlock_mutex(outputMutex);
-        return false;
-    }
-    configuringOutput = false;
-    unlock_mutex(outputMutex);
-    return true;
 }
 
 void AudioOutputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels)
@@ -87,8 +44,6 @@ void AudioOutputModule::Configure(uint32_t sampleRate, uint32_t bitsPerSample, u
 	outputCSamplesSize = outputSampleNumber * outputChannels * outputBitsPerSample / 8 * sizeof(unsigned char);
 
 	wrapper->outputState = AUDIO_STATE_CONFIGURED;
-	
-
 }
 
 void AudioOutputModule::Start()
@@ -96,12 +51,11 @@ void AudioOutputModule::Start()
 	if (wrapper->outputState == AUDIO_STATE_RUNNING)
 		return;
 	wrapper->outputState = AUDIO_STATE_RUNNING;
-	
+
 	LOGE("STARTING RECEIVER THREAD");
 	start_thread(receiverThread, StartReceiverThread, this);
 	set_thread_priority(receiverThread, get_thread_max_priority());
 	set_thread_name(receiverThread, "voip-receiver");
-	
 }
 
 void AudioOutputModule::Stop()
@@ -121,36 +75,44 @@ float AudioOutputModule::GetLevel()
 	return outputLevel;
 }
 
-
-void* AudioOutputModule::StartReceiverThread(void* output){
-	((AudioOutputModule*)output)->RunReceiverThread();
+void *AudioOutputModule::StartReceiverThread(void *output)
+{
+	((AudioOutputModule *)output)->RunReceiverThread();
 	return NULL;
 }
 
-void AudioOutputModule::RunReceiverThread() {
-	unsigned char *data = (unsigned char *) malloc(outputCSamplesSize);
+void AudioOutputModule::RunReceiverThread()
+{
+	unsigned char *data = (unsigned char *)malloc(outputCSamplesSize);
 	double time = VoIPController::GetCurrentTime();
 	double sleeptime;
 
-	while (wrapper->outputState == AUDIO_STATE_RUNNING) {
-		lock_mutex(outputMutex);
-		
-		while (!configuringOutput && wrapper->outputState == AUDIO_STATE_RUNNING) {
-			if ((sleeptime = (outputWritePeriodSec - (VoIPController::GetCurrentTime() - time))*1000000.0) < 0) {
+	while (wrapper->outputState == AUDIO_STATE_RUNNING)
+	{
+		lock_mutex(wrapper->outputMutex);
+
+		while (!wrapper->configuringOutput && wrapper->outputState == AUDIO_STATE_RUNNING)
+		{
+			if ((sleeptime = (outputWritePeriodSec - (VoIPController::GetCurrentTime() - time)) * 1000000.0) < 0)
+			{
 				LOGE("Receiver: I'm late!");
-			} else {
+			}
+			else
+			{
 				usleep(sleeptime);
 			}
 
 			time = VoIPController::GetCurrentTime();
 			InvokeCallback(data, outputCSamplesSize);
-			if (outputFile != NULL) {
-				if (fwrite(data, sizeof(unsigned char), outputSamplesSize, outputFile) != outputCSamplesSize) {
+			if (wrapper->outputFile != NULL)
+			{
+				if (fwrite(data, sizeof(unsigned char), outputSamplesSize, wrapper->outputFile) != outputCSamplesSize)
+				{
 					LOGE("COULD NOT WRITE DATA TO FILE");
 				}
 			}
 		}
-		unlock_mutex(outputMutex);
+		unlock_mutex(wrapper->outputMutex);
 	}
 	free(data);
 }

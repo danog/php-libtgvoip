@@ -50,6 +50,12 @@ void VoIP::initVoIPController() {
     out=NULL;
     inst = new VoIPController();
 
+    outputFile=NULL;
+	configuringOutput = false;
+	init_mutex(outputMutex);
+    init_mutex(inputMutex);
+    configuringInput = false;
+
     inst->implData = (void *) this;
     inst->SetStateCallback([](VoIPController *controller, int state) {
         ((VoIP *)controller->implData)->state = state;
@@ -64,6 +70,24 @@ void VoIP::deinitVoIPController() {
     if (callState != CALL_STATE_ENDED) {
         callState = CALL_STATE_ENDED;
         delete inst;
+        
+        lock_mutex(inputMutex);
+        unlock_mutex(inputMutex);
+        free_mutex(inputMutex);
+        lock_mutex(outputMutex);
+        unlock_mutex(outputMutex);
+        free_mutex(outputMutex);
+
+        while (holdFiles.size()) {
+            fclose(holdFiles.front());
+            holdFiles.pop();
+        }
+        while (inputFiles.size()) {
+            fclose(inputFiles.front());
+            inputFiles.pop();
+        }
+        unsetOutputFile();
+
     }
 }
 
@@ -244,20 +268,82 @@ void VoIP::parseConfig() {
     }
 }
 
-Php::Value VoIP::setOutputFile(Php::Parameters &params) {
-    return out->setOutputFile(params[0]);
-}
+
 Php::Value VoIP::unsetOutputFile() {
-    return out->unsetOutputFile();
-}
-Php::Value VoIP::play(Php::Parameters &params) {
-    if (in->play(params[0])) {
-        return this;
+	if (outputFile == NULL) {
+        return false;
     }
-    return false;
+
+    configuringOutput = true;
+    lock_mutex(outputMutex);
+	fflush(outputFile);
+    fclose(outputFile);
+    outputFile = NULL;
+    configuringOutput = false;
+    unlock_mutex(outputMutex);
+    
+    return true;
+
+}
+Php::Value VoIP::setOutputFile(Php::Parameters &params) {
+    configuringOutput = true;
+
+    lock_mutex(outputMutex);
+    if (outputFile != NULL) {
+        fclose(outputFile);
+        outputFile=NULL;
+    }
+    outputFile = fopen(params[0], "wb");
+    if (outputFile == NULL) {
+        throw Php::Exception("Could not open file!");
+        configuringOutput = false;
+        unlock_mutex(outputMutex);
+        return false;
+    }
+    configuringOutput = false;
+    unlock_mutex(outputMutex);
+    return true;
+}
+
+
+Php::Value VoIP::play(Php::Parameters &params) {
+    FILE *tmp = fopen(params[0], "rb");
+
+    if (tmp == NULL) {
+        throw Php::Exception("Could not open file!");
+        return false;
+    }
+
+    configuringInput = true;
+    lock_mutex(inputMutex);
+    inputFiles.push(tmp);
+    configuringInput = false;
+    unlock_mutex(inputMutex);
+
+    return this;
 }
 Php::Value VoIP::playOnHold(Php::Parameters &params) {
-    return in->playOnHold(params);
+   configuringInput = true;
+    FILE *tmp = NULL;
+
+    lock_mutex(inputMutex);
+    while (holdFiles.size()) {
+        fclose(holdFiles.front());
+        holdFiles.pop();
+    }
+    for (int i = 0; i < params[0].size(); i++) {
+        tmp = fopen(params[0][i], "rb");
+        if (tmp == NULL) {
+            throw Php::Exception("Could not open file!");
+            configuringInput = false;
+            unlock_mutex(inputMutex);
+            return false;
+        }
+        holdFiles.push(tmp);
+    }
+    configuringInput = false;
+    unlock_mutex(inputMutex);
+    return true;
 }
 
 void VoIP::setMicMute(Php::Parameters &params)

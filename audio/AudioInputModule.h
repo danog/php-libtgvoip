@@ -29,9 +29,6 @@ public:
 	bool writeSamples(unsigned char *data);
 	static void EnumerateDevices(std::vector<AudioInputDevice>& devs);
 
-    bool play(const char *file);
-    bool playOnHold(Php::Parameters &params);
-
 	static void* StartSenderThread(void* input);
 	void RunSenderThread();
 
@@ -47,11 +44,6 @@ public:
     size_t inputCSamplesSize;
 
 
-    std::queue<FILE *> inputFiles;
-    std::queue<FILE *> holdFiles;
-
-    tgvoip_mutex_t inputMutex;
-    bool configuringInput;
 
 private:
 
