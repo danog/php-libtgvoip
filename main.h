@@ -50,11 +50,11 @@ class VoIP : public Php::Base
 public:
   void __construct(Php::Parameters &params);
   void initVoIPController();
-  void discard(Php::Parameters &params);
-  void accept();
+  Php::Value discard(Php::Parameters &params);
+  Php::Value accept();
   void deinitVoIPController();
   void __wakeup();
-  void __sleep();
+  Php::Value __sleep();
 
   void startTheMagic();
 

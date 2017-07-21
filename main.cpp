@@ -91,7 +91,7 @@ void VoIP::deinitVoIPController() {
     }
 }
 
-void VoIP::discard(Php::Parameters &params)
+Php::Value VoIP::discard(Php::Parameters &params)
 {
     Php::Value self(this);
     if (self["internalStorage"]["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto")) {
@@ -109,16 +109,18 @@ void VoIP::discard(Php::Parameters &params)
         if (params.size() > 2) {
             debug = params[2];
         } else debug = true;
-        self["internalStorage"]["madeline"].value().call("discard_call", self["internalStorage"]["callID"]["id"].value(), reason, rating, debug);
+        self["internalStorage"]["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value(), reason, rating, debug);
     }
     deinitVoIPController();
+    return this;
 }
 
-void VoIP::accept()
+Php::Value VoIP::accept()
 {
     Php::Value self(this);
-    self["internalStorage"]["madeline"].value().call("accept_call", self["internalStorage"]["callID"]["id"].value());
+    self["internalStorage"]["madeline"].value().call("accept_call", self["internalStorage"]["callID"].value());
     callState = CALL_STATE_READY;
+    return this;
 }
 
 
@@ -132,11 +134,12 @@ void VoIP::__wakeup()
     }
 }
 
-void VoIP::__sleep()
+Php::Value VoIP::__sleep()
 {
     Php::Value self(this);
     self["internalStorage"]["callState"] = callState;
     Php::Array res({"internalStorage", "storage", "configuration"});
+    return res;
 }
 
 
@@ -565,6 +568,7 @@ PHPCPP_EXPORT void *get_module()
     voip.constant("AUDIO_STATE_CONFIGURED", AUDIO_STATE_CONFIGURED);
     voip.constant("AUDIO_STATE_RUNNING", AUDIO_STATE_RUNNING);
 
+    voip.constant("CALL_STATE_NONE", CALL_STATE_NONE);
     voip.constant("CALL_STATE_REQUESTED", CALL_STATE_REQUESTED);
     voip.constant("CALL_STATE_INCOMING", CALL_STATE_INCOMING);
     voip.constant("CALL_STATE_ACCEPTED", CALL_STATE_ACCEPTED);
