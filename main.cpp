@@ -117,9 +117,9 @@ Php::Value VoIP::discard(Php::Parameters &params)
 
 Php::Value VoIP::accept()
 {
+    callState = CALL_STATE_ACCEPTED;
     Php::Value self(this);
     self["internalStorage"]["madeline"].value().call("accept_call", self["internalStorage"]["callID"].value());
-    callState = CALL_STATE_ACCEPTED;
     return this;
 }
 
@@ -127,11 +127,15 @@ Php::Value VoIP::accept()
 void VoIP::__wakeup()
 {
     Php::Value self(this);
-    callState = self["internalStorage"]["callState"];
+
+    callState = self["internalStorage"]["callState"].value();
     initVoIPController();
+
     if (self["configuration"]) {
         parseConfig();
     }
+    if (callState == CALL_STATE_READY) startTheMagic();
+
 }
 
 Php::Value VoIP::__sleep()
