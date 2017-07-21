@@ -119,7 +119,7 @@ Php::Value VoIP::accept()
 {
     Php::Value self(this);
     self["internalStorage"]["madeline"].value().call("accept_call", self["internalStorage"]["callID"].value());
-    callState = CALL_STATE_READY;
+    callState = CALL_STATE_ACCEPTED;
     return this;
 }
 
