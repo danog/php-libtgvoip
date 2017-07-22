@@ -501,7 +501,7 @@ PHPCPP_EXPORT void *get_module()
     voip.method<&VoIP::getInputParams>("getInputParams", Php::Public | Php::Final);
 
     voip.method<&VoIP::discard>("__destruct", Php::Public | Php::Final);
-    voip.method<&VoIP::discard>("discard", Php::Public | Php::Final, {Php::ByVal("reason", Php::Type::Array, false), Php::ByVal("rating", Php::Type::Array, false)});
+    voip.method<&VoIP::discard>("discard", Php::Public | Php::Final, {Php::ByVal("reason", Php::Type::Array, false), Php::ByVal("rating", Php::Type::Array, false), Php::ByVal("debug", Php::Type::Bool, false)});
     voip.method<&VoIP::accept>("accept", Php::Public | Php::Final);
     voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final, {
         Php::ByVal("creator", Php::Type::Bool), Php::ByVal("otherID", Php::Type::Numeric), Php::ByVal("InputPhoneCall", Php::Type::Array), Php::ByRef("madeline", Php::Type::Object), Php::ByVal("callState", Php::Type::Numeric), Php::ByVal("protocol", Php::Type::Array)
