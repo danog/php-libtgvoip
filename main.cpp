@@ -208,16 +208,16 @@ void VoIP::setVisualization(Php::Parameters &params)
 void VoIP::parseConfig() {
     Php::Value self(this);
     voip_config_t cfg;
-    cfg.recv_timeout = (double) self["configuration"]["config"]["recv_timeout"];
-    cfg.init_timeout = (double) self["configuration"]["config"]["init_timeout"];
-    cfg.data_saving = (int) self["configuration"]["config"]["data_saving"];
-    cfg.enableAEC = (bool) self["configuration"]["config"]["enable_AEC"];
-    cfg.enableNS = (bool) self["configuration"]["config"]["enable_NS"];
-    cfg.enableAGC = (bool) self["configuration"]["config"]["enable_AGC"];
+    cfg.recv_timeout = (double) self["configuration"]["recv_timeout"];
+    cfg.init_timeout = (double) self["configuration"]["init_timeout"];
+    cfg.data_saving = (int) self["configuration"]["data_saving"];
+    cfg.enableAEC = (bool) self["configuration"]["enable_AEC"];
+    cfg.enableNS = (bool) self["configuration"]["enable_NS"];
+    cfg.enableAGC = (bool) self["configuration"]["enable_AGC"];
 
-    if (self["configuration"]["config"]["log_file_path"])
+    if (self["configuration"]["log_file_path"])
     {
-        strncpy(cfg.logFilePath, self["configuration"]["config"]["log_file_path"], sizeof(cfg.logFilePath));
+        strncpy(cfg.logFilePath, self["configuration"]["log_file_path"], sizeof(cfg.logFilePath));
         cfg.logFilePath[sizeof(cfg.logFilePath) - 1] = 0;
     }
     else
@@ -225,9 +225,9 @@ void VoIP::parseConfig() {
         memset(cfg.logFilePath, 0, sizeof(cfg.logFilePath));
     }
 
-    if (self["configuration"]["config"]["stats_dump_file_path"])
+    if (self["configuration"]["stats_dump_file_path"])
     {
-        strncpy(cfg.statsDumpFilePath, self["configuration"]["config"]["stats_dump_file_path"], sizeof(cfg.statsDumpFilePath));
+        strncpy(cfg.statsDumpFilePath, self["configuration"]["stats_dump_file_path"], sizeof(cfg.statsDumpFilePath));
         cfg.statsDumpFilePath[sizeof(cfg.statsDumpFilePath) - 1] = 0;
     }
     else
