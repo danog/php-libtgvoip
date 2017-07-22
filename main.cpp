@@ -354,9 +354,10 @@ Php::Value VoIP::playOnHold(Php::Parameters &params) {
     return this;
 }
 
-void VoIP::setMicMute(Php::Parameters &params)
+Php::Value VoIP::setMicMute(Php::Parameters &params)
 {
-    inst->SetMicMute((bool) params[0].value());
+    inst->SetMicMute((bool) params[0]);
+    return this;
 }
 
 

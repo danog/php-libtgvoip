@@ -75,7 +75,7 @@ public:
   void debugCtl(Php::Parameters &params);
 
   void setOutputLevel(Php::Parameters &params);
-  void setMicMute(Php::Parameters &params);
+  Php::Value setMicMute(Php::Parameters &params);
 
   Php::Value getProtocol();
   Php::Value getState();
