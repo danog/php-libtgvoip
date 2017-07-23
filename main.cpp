@@ -45,7 +45,7 @@ void VoIP::__construct(Php::Parameters &params)
 
     initVoIPController();
 }
-void VoIP::initVoIPController() {    
+void VoIP::initVoIPController() {
     in=NULL;
     out=NULL;
     inst = new VoIPController();
@@ -70,7 +70,7 @@ void VoIP::deinitVoIPController() {
     if (callState != CALL_STATE_ENDED) {
         callState = CALL_STATE_ENDED;
         delete inst;
-        
+
         lock_mutex(inputMutex);
         unlock_mutex(inputMutex);
         free_mutex(inputMutex);
@@ -99,9 +99,9 @@ Php::Value VoIP::discard(Php::Parameters &params)
         Php::Array rating;
         Php::Value debug;
         if (params.size() > 0) {
-           reason = params[0];
+            reason = params[0];
         } else {
-           reason["_"] = "phoneCallDiscardReasonDisconnect";
+            reason["_"] = "phoneCallDiscardReasonDisconnect";
         }
         if (params.size() > 1) {
             rating = params[1];
@@ -110,6 +110,7 @@ Php::Value VoIP::discard(Php::Parameters &params)
             debug = params[2];
         } else debug = true;
         self["internalStorage"]["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value(), reason, rating, debug);
+        self["internalStorage"]["madeline"].value().call("handle_future_salts", self["internalStorage"]["otherID"].value());
     }
     deinitVoIPController();
     return this;
@@ -268,7 +269,7 @@ void VoIP::parseConfig() {
         eps.push_back(Endpoint(endpoints[i]["id"], (int32_t)endpoints[i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
         free(pTag);
     }
-    
+
     inst->SetRemoteEndpoints(eps, (bool) self["internalStorage"]["protocol"]["udp_p2p"]);
     inst->SetNetworkType(self["configuration"]["network_type"]);
     if (self["configuration"]["proxy"]) {
@@ -278,7 +279,7 @@ void VoIP::parseConfig() {
 
 
 Php::Value VoIP::unsetOutputFile() {
-	if (outputFile == NULL) {
+    if (outputFile == NULL) {
         return false;
     }
 
@@ -289,7 +290,7 @@ Php::Value VoIP::unsetOutputFile() {
     outputFile = NULL;
     configuringOutput = false;
     unlock_mutex(outputMutex);
-    
+
     return this;
 
 }
@@ -331,7 +332,7 @@ Php::Value VoIP::play(Php::Parameters &params) {
     return this;
 }
 Php::Value VoIP::playOnHold(Php::Parameters &params) {
-   configuringInput = true;
+    configuringInput = true;
     FILE *tmp = NULL;
 
     lock_mutex(inputMutex);
@@ -470,124 +471,124 @@ Php::Value VoIP::getInputParams()
 
 extern "C" {
 
-/**
-     *  Function that is called by PHP right after the PHP process
-     *  has started, and that returns an address of an internal PHP
-     *  strucure with all the details and features of your extension
-     *
-     *  @return void*   a pointer to an address that is understood by PHP
-     */
-PHPCPP_EXPORT void *get_module()
-{
-    // static(!) Php::Extension object that should stay in memory
-    // for the entire duration of the process (that's why it's static)
-    static Php::Extension extension("php-libtgvoip", "1.0");
+    /**
+         *  Function that is called by PHP right after the PHP process
+         *  has started, and that returns an address of an internal PHP
+         *  strucure with all the details and features of your extension
+         *
+         *  @return void*   a pointer to an address that is understood by PHP
+         */
+    PHPCPP_EXPORT void *get_module()
+    {
+        // static(!) Php::Extension object that should stay in memory
+        // for the entire duration of the process (that's why it's static)
+        static Php::Extension extension("php-libtgvoip", "1.0");
 
-    // description of the class so that PHP knows which methods are accessible
-    Php::Class<VoIP> voip("VoIP");
+        // description of the class so that PHP knows which methods are accessible
+        Php::Class<VoIP> voip("VoIP");
 
-    voip.method<&VoIP::getState>("getState", Php::Public | Php::Final);
-    voip.method<&VoIP::getCallState>("getCallState", Php::Public | Php::Final);
-    voip.method<&VoIP::getVisualization>("getVisualization", Php::Public | Php::Final);
-    voip.method<&VoIP::setVisualization>("setVisualization", Php::Public | Php::Final, {Php::ByVal("visualization", Php::Type::Array)});
-    voip.method<&VoIP::getOtherID>("getOtherID", Php::Public | Php::Final);
-    voip.method<&VoIP::getProtocol>("getProtocol", Php::Public | Php::Final);
-    voip.method<&VoIP::getCallID>("getCallID", Php::Public | Php::Final);
-    voip.method<&VoIP::isCreator>("isCreator", Php::Public | Php::Final);
-    voip.method<&VoIP::whenCreated>("whenCreated", Php::Public | Php::Final);
-    voip.method<&VoIP::isPlaying>("isPlaying", Php::Public | Php::Final);
-    voip.method<&VoIP::getOutputState>("getOutputState", Php::Public | Php::Final);
-    voip.method<&VoIP::getInputState>("getInputState", Php::Public | Php::Final);
-    voip.method<&VoIP::getOutputParams>("getOutputParams", Php::Public | Php::Final);
-    voip.method<&VoIP::getInputParams>("getInputParams", Php::Public | Php::Final);
+        voip.method<&VoIP::getState>("getState", Php::Public | Php::Final);
+        voip.method<&VoIP::getCallState>("getCallState", Php::Public | Php::Final);
+        voip.method<&VoIP::getVisualization>("getVisualization", Php::Public | Php::Final);
+        voip.method<&VoIP::setVisualization>("setVisualization", Php::Public | Php::Final, {Php::ByVal("visualization", Php::Type::Array)});
+        voip.method<&VoIP::getOtherID>("getOtherID", Php::Public | Php::Final);
+        voip.method<&VoIP::getProtocol>("getProtocol", Php::Public | Php::Final);
+        voip.method<&VoIP::getCallID>("getCallID", Php::Public | Php::Final);
+        voip.method<&VoIP::isCreator>("isCreator", Php::Public | Php::Final);
+        voip.method<&VoIP::whenCreated>("whenCreated", Php::Public | Php::Final);
+        voip.method<&VoIP::isPlaying>("isPlaying", Php::Public | Php::Final);
+        voip.method<&VoIP::getOutputState>("getOutputState", Php::Public | Php::Final);
+        voip.method<&VoIP::getInputState>("getInputState", Php::Public | Php::Final);
+        voip.method<&VoIP::getOutputParams>("getOutputParams", Php::Public | Php::Final);
+        voip.method<&VoIP::getInputParams>("getInputParams", Php::Public | Php::Final);
 
-    voip.method<&VoIP::discard>("__destruct", Php::Public | Php::Final);
-    voip.method<&VoIP::discard>("discard", Php::Public | Php::Final, {Php::ByVal("reason", Php::Type::Array, false), Php::ByVal("rating", Php::Type::Array, false), Php::ByVal("debug", Php::Type::Bool, false)});
-    voip.method<&VoIP::accept>("accept", Php::Public | Php::Final);
-    voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final, {
-        Php::ByVal("creator", Php::Type::Bool), Php::ByVal("otherID", Php::Type::Numeric), Php::ByVal("InputPhoneCall", Php::Type::Array), Php::ByRef("madeline", Php::Type::Object), Php::ByVal("callState", Php::Type::Numeric), Php::ByVal("protocol", Php::Type::Array)
-    });
-    voip.method<&VoIP::__wakeup>("__wakeup", Php::Public | Php::Final);
-    voip.method<&VoIP::__sleep>("__sleep", Php::Public | Php::Final);
-    voip.method<&VoIP::setMicMute>("setMicMute", Php::Public | Php::Final, {
-        Php::ByVal("type", Php::Type::Bool),
-    });
-    voip.method<&VoIP::debugCtl>("debugCtl", Php::Public | Php::Final, {
-        Php::ByVal("request", Php::Type::Numeric), Php::ByVal("param", Php::Type::Numeric),
-    });
-    voip.method<&VoIP::parseConfig>("parseConfig", Php::Public | Php::Final);
-    voip.method<&VoIP::getDebugLog>("getDebugLog", Php::Public | Php::Final);
-    voip.method<&VoIP::getLastError>("getLastError", Php::Public | Php::Final);
-    voip.method<&VoIP::getPreferredRelayID>("getPreferredRelayID", Php::Public | Php::Final);
-    voip.method<&VoIP::getVersion>("getVersion", Php::Public | Php::Final);
-    voip.method<&VoIP::getDebugString>("getDebugString", Php::Public | Php::Final);
-    voip.method<&VoIP::getStats>("getStats", Php::Public | Php::Final);
-    voip.method<&VoIP::startTheMagic>("startTheMagic", Php::Public | Php::Final);
-    
-    voip.method<&VoIP::play>("then", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
-    voip.method<&VoIP::play>("play", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
-    voip.method<&VoIP::playOnHold>("playOnHold", Php::Public | Php::Final, {Php::ByVal("files", Php::Type::Array)});
-    
-    voip.method<&VoIP::setOutputFile>("setOutputFile", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
-    voip.method<&VoIP::unsetOutputFile>("unsetOutputFile", Php::Public | Php::Final);
+        voip.method<&VoIP::discard>("__destruct", Php::Public | Php::Final);
+        voip.method<&VoIP::discard>("discard", Php::Public | Php::Final, {Php::ByVal("reason", Php::Type::Array, false), Php::ByVal("rating", Php::Type::Array, false), Php::ByVal("debug", Php::Type::Bool, false)});
+        voip.method<&VoIP::accept>("accept", Php::Public | Php::Final);
+        voip.method<&VoIP::__construct>("__construct", Php::Public | Php::Final, {
+            Php::ByVal("creator", Php::Type::Bool), Php::ByVal("otherID", Php::Type::Numeric), Php::ByVal("InputPhoneCall", Php::Type::Array), Php::ByRef("madeline", Php::Type::Object), Php::ByVal("callState", Php::Type::Numeric), Php::ByVal("protocol", Php::Type::Array)
+        });
+        voip.method<&VoIP::__wakeup>("__wakeup", Php::Public | Php::Final);
+        voip.method<&VoIP::__sleep>("__sleep", Php::Public | Php::Final);
+        voip.method<&VoIP::setMicMute>("setMicMute", Php::Public | Php::Final, {
+            Php::ByVal("type", Php::Type::Bool),
+        });
+        voip.method<&VoIP::debugCtl>("debugCtl", Php::Public | Php::Final, {
+            Php::ByVal("request", Php::Type::Numeric), Php::ByVal("param", Php::Type::Numeric),
+        });
+        voip.method<&VoIP::parseConfig>("parseConfig", Php::Public | Php::Final);
+        voip.method<&VoIP::getDebugLog>("getDebugLog", Php::Public | Php::Final);
+        voip.method<&VoIP::getLastError>("getLastError", Php::Public | Php::Final);
+        voip.method<&VoIP::getPreferredRelayID>("getPreferredRelayID", Php::Public | Php::Final);
+        voip.method<&VoIP::getVersion>("getVersion", Php::Public | Php::Final);
+        voip.method<&VoIP::getDebugString>("getDebugString", Php::Public | Php::Final);
+        voip.method<&VoIP::getStats>("getStats", Php::Public | Php::Final);
+        voip.method<&VoIP::startTheMagic>("startTheMagic", Php::Public | Php::Final);
+
+        voip.method<&VoIP::play>("then", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
+        voip.method<&VoIP::play>("play", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
+        voip.method<&VoIP::playOnHold>("playOnHold", Php::Public | Php::Final, {Php::ByVal("files", Php::Type::Array)});
+
+        voip.method<&VoIP::setOutputFile>("setOutputFile", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
+        voip.method<&VoIP::unsetOutputFile>("unsetOutputFile", Php::Public | Php::Final);
 
 
-    voip.property("configuration", 0, Php::Public);
-    voip.property("storage", 0, Php::Public);
-    voip.property("internalStorage", 0, Php::Private);
+        voip.property("configuration", 0, Php::Public);
+        voip.property("storage", 0, Php::Public);
+        voip.property("internalStorage", 0, Php::Private);
 
-    voip.constant("STATE_CREATED", STATE_CREATED);
-    voip.constant("STATE_WAIT_INIT", STATE_WAIT_INIT);
-    voip.constant("STATE_WAIT_INIT_ACK", STATE_WAIT_INIT_ACK);
-    voip.constant("STATE_ESTABLISHED", STATE_ESTABLISHED);
-    voip.constant("STATE_FAILED", STATE_FAILED);
-    voip.constant("STATE_RECONNECTING", STATE_RECONNECTING);
+        voip.constant("STATE_CREATED", STATE_CREATED);
+        voip.constant("STATE_WAIT_INIT", STATE_WAIT_INIT);
+        voip.constant("STATE_WAIT_INIT_ACK", STATE_WAIT_INIT_ACK);
+        voip.constant("STATE_ESTABLISHED", STATE_ESTABLISHED);
+        voip.constant("STATE_FAILED", STATE_FAILED);
+        voip.constant("STATE_RECONNECTING", STATE_RECONNECTING);
 
-    voip.constant("TGVOIP_ERROR_UNKNOWN", TGVOIP_ERROR_UNKNOWN);
-    voip.constant("TGVOIP_ERROR_INCOMPATIBLE", TGVOIP_ERROR_INCOMPATIBLE);
-    voip.constant("TGVOIP_ERROR_TIMEOUT", TGVOIP_ERROR_TIMEOUT);
-    voip.constant("TGVOIP_ERROR_AUDIO_IO", TGVOIP_ERROR_AUDIO_IO);
+        voip.constant("TGVOIP_ERROR_UNKNOWN", TGVOIP_ERROR_UNKNOWN);
+        voip.constant("TGVOIP_ERROR_INCOMPATIBLE", TGVOIP_ERROR_INCOMPATIBLE);
+        voip.constant("TGVOIP_ERROR_TIMEOUT", TGVOIP_ERROR_TIMEOUT);
+        voip.constant("TGVOIP_ERROR_AUDIO_IO", TGVOIP_ERROR_AUDIO_IO);
 
-    voip.constant("NET_TYPE_UNKNOWN", NET_TYPE_UNKNOWN);
-    voip.constant("NET_TYPE_GPRS", NET_TYPE_GPRS);
-    voip.constant("NET_TYPE_EDGE", NET_TYPE_EDGE);
-    voip.constant("NET_TYPE_3G", NET_TYPE_3G);
-    voip.constant("NET_TYPE_HSPA", NET_TYPE_HSPA);
-    voip.constant("NET_TYPE_LTE", NET_TYPE_LTE);
-    voip.constant("NET_TYPE_WIFI", NET_TYPE_WIFI);
-    voip.constant("NET_TYPE_ETHERNET", NET_TYPE_ETHERNET);
-    voip.constant("NET_TYPE_OTHER_HIGH_SPEED", NET_TYPE_OTHER_HIGH_SPEED);
-    voip.constant("NET_TYPE_OTHER_LOW_SPEED", NET_TYPE_OTHER_LOW_SPEED);
-    voip.constant("NET_TYPE_DIALUP", NET_TYPE_DIALUP);
-    voip.constant("NET_TYPE_OTHER_MOBILE", NET_TYPE_OTHER_MOBILE);
+        voip.constant("NET_TYPE_UNKNOWN", NET_TYPE_UNKNOWN);
+        voip.constant("NET_TYPE_GPRS", NET_TYPE_GPRS);
+        voip.constant("NET_TYPE_EDGE", NET_TYPE_EDGE);
+        voip.constant("NET_TYPE_3G", NET_TYPE_3G);
+        voip.constant("NET_TYPE_HSPA", NET_TYPE_HSPA);
+        voip.constant("NET_TYPE_LTE", NET_TYPE_LTE);
+        voip.constant("NET_TYPE_WIFI", NET_TYPE_WIFI);
+        voip.constant("NET_TYPE_ETHERNET", NET_TYPE_ETHERNET);
+        voip.constant("NET_TYPE_OTHER_HIGH_SPEED", NET_TYPE_OTHER_HIGH_SPEED);
+        voip.constant("NET_TYPE_OTHER_LOW_SPEED", NET_TYPE_OTHER_LOW_SPEED);
+        voip.constant("NET_TYPE_DIALUP", NET_TYPE_DIALUP);
+        voip.constant("NET_TYPE_OTHER_MOBILE", NET_TYPE_OTHER_MOBILE);
 
-    voip.constant("DATA_SAVING_NEVER", DATA_SAVING_NEVER);
-    voip.constant("DATA_SAVING_MOBILE", DATA_SAVING_MOBILE);
-    voip.constant("DATA_SAVING_ALWAYS", DATA_SAVING_ALWAYS);
+        voip.constant("DATA_SAVING_NEVER", DATA_SAVING_NEVER);
+        voip.constant("DATA_SAVING_MOBILE", DATA_SAVING_MOBILE);
+        voip.constant("DATA_SAVING_ALWAYS", DATA_SAVING_ALWAYS);
 
-    voip.constant("PROXY_NONE", PROXY_NONE);
-    voip.constant("PROXY_SOCKS5", PROXY_SOCKS5);
+        voip.constant("PROXY_NONE", PROXY_NONE);
+        voip.constant("PROXY_SOCKS5", PROXY_SOCKS5);
 
-    voip.constant("AUDIO_STATE_NONE", AUDIO_STATE_NONE);
-    voip.constant("AUDIO_STATE_CREATED", AUDIO_STATE_CREATED);
-    voip.constant("AUDIO_STATE_CONFIGURED", AUDIO_STATE_CONFIGURED);
-    voip.constant("AUDIO_STATE_RUNNING", AUDIO_STATE_RUNNING);
+        voip.constant("AUDIO_STATE_NONE", AUDIO_STATE_NONE);
+        voip.constant("AUDIO_STATE_CREATED", AUDIO_STATE_CREATED);
+        voip.constant("AUDIO_STATE_CONFIGURED", AUDIO_STATE_CONFIGURED);
+        voip.constant("AUDIO_STATE_RUNNING", AUDIO_STATE_RUNNING);
 
-    voip.constant("CALL_STATE_NONE", CALL_STATE_NONE);
-    voip.constant("CALL_STATE_REQUESTED", CALL_STATE_REQUESTED);
-    voip.constant("CALL_STATE_INCOMING", CALL_STATE_INCOMING);
-    voip.constant("CALL_STATE_ACCEPTED", CALL_STATE_ACCEPTED);
-    voip.constant("CALL_STATE_CONFIRMED", CALL_STATE_CONFIRMED);
-    voip.constant("CALL_STATE_READY", CALL_STATE_READY);
-    voip.constant("CALL_STATE_ENDED", CALL_STATE_ENDED);
+        voip.constant("CALL_STATE_NONE", CALL_STATE_NONE);
+        voip.constant("CALL_STATE_REQUESTED", CALL_STATE_REQUESTED);
+        voip.constant("CALL_STATE_INCOMING", CALL_STATE_INCOMING);
+        voip.constant("CALL_STATE_ACCEPTED", CALL_STATE_ACCEPTED);
+        voip.constant("CALL_STATE_CONFIRMED", CALL_STATE_CONFIRMED);
+        voip.constant("CALL_STATE_READY", CALL_STATE_READY);
+        voip.constant("CALL_STATE_ENDED", CALL_STATE_ENDED);
 
-    Php::Namespace danog("danog");
-    Php::Namespace MadelineProto("MadelineProto");
-    
-    MadelineProto.add(move(voip));
-    danog.add(move(MadelineProto));
-    extension.add(move(danog));
+        Php::Namespace danog("danog");
+        Php::Namespace MadelineProto("MadelineProto");
 
-    return extension;
-}
+        MadelineProto.add(move(voip));
+        danog.add(move(MadelineProto));
+        extension.add(move(danog));
+
+        return extension;
+    }
 }

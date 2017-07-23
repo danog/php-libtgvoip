@@ -19,34 +19,34 @@ namespace audio
 class AudioOutputModule : public AudioOutput
 {
 
-  public:
-	AudioOutputModule(std::string deviceID, VoIPController *controller);
-	virtual ~AudioOutputModule();
-	virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
-	virtual void Start();
-	virtual void Stop();
-	virtual bool IsPlaying() override;
-	virtual float GetLevel() override;
-	static void EnumerateDevices(std::vector<AudioOutputDevice> &devs);
+public:
+    AudioOutputModule(std::string deviceID, VoIPController *controller);
+    virtual ~AudioOutputModule();
+    virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
+    virtual void Start();
+    virtual void Stop();
+    virtual bool IsPlaying() override;
+    virtual float GetLevel() override;
+    static void EnumerateDevices(std::vector<AudioOutputDevice> &devs);
 
-	static void *StartReceiverThread(void *output);
-	void RunReceiverThread();
+    static void *StartReceiverThread(void *output);
+    void RunReceiverThread();
 
-	int outputBitsPerSample;
-	int outputSampleRate;
-	int outputChannels;
-	int outputSamplePeriod;
-	int outputWritePeriod;
-	double outputSamplePeriodSec;
-	double outputWritePeriodSec;
-	int outputSampleNumber;
-	int outputSamplesSize;
-	size_t outputCSamplesSize;
-	float outputLevel = 0.0;
+    int outputBitsPerSample;
+    int outputSampleRate;
+    int outputChannels;
+    int outputSamplePeriod;
+    int outputWritePeriod;
+    double outputSamplePeriodSec;
+    double outputWritePeriodSec;
+    int outputSampleNumber;
+    int outputSamplesSize;
+    size_t outputCSamplesSize;
+    float outputLevel = 0.0;
 
-  private:
-	tgvoip_thread_t receiverThread;
-	VoIP *wrapper;
+private:
+    tgvoip_thread_t receiverThread;
+    VoIP *wrapper;
 };
 }
 }

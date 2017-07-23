@@ -16,20 +16,21 @@ using namespace tgvoip;
 using namespace tgvoip::audio;
 
 
-namespace tgvoip{ namespace audio{
-class AudioInputModule : public AudioInput{
+namespace tgvoip {
+namespace audio {
+class AudioInputModule : public AudioInput {
 
 public:
-	AudioInputModule(std::string deviceID, VoIPController *controller);
-	virtual ~AudioInputModule();
+    AudioInputModule(std::string deviceID, VoIPController *controller);
+    virtual ~AudioInputModule();
 
-	virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
-	virtual void Start();
-	virtual void Stop();
-	static void EnumerateDevices(std::vector<AudioInputDevice>& devs);
+    virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
+    virtual void Start();
+    virtual void Stop();
+    static void EnumerateDevices(std::vector<AudioInputDevice>& devs);
 
-	static void* StartSenderThread(void* input);
-	void RunSenderThread();
+    static void* StartSenderThread(void* input);
+    void RunSenderThread();
 
     int inputBitsPerSample;
     int inputSampleRate;
@@ -47,9 +48,10 @@ public:
 private:
 
 
-	tgvoip_thread_t senderThread;
-	VoIP *wrapper;
+    tgvoip_thread_t senderThread;
+    VoIP *wrapper;
 };
-}}
+}
+}
 
 #endif //LIBTGVOIP_AUDIOINPUTPHP_H

@@ -141,8 +141,12 @@ ${EXTENSION}:				${OBJECTS}
 
 ${OBJECTS}:
 
+${INI_DIR}:
+					mkdir ${INI_DIR}
+${EXTENSION_DIR}:
+					mkdir ${EXTENSION_DIR}
 
-install:
+install:				${INI_DIR} ${EXTENSION_DIR}
 					${CP} ${EXTENSION} ${EXTENSION_DIR}
 					${CP} ${INI} ${INI_DIR}
 

@@ -48,74 +48,74 @@ class AudioOutputModule;
 class VoIP : public Php::Base
 {
 public:
-  void __construct(Php::Parameters &params);
-  void initVoIPController();
-  Php::Value discard(Php::Parameters &params);
-  Php::Value accept();
-  void deinitVoIPController();
-  void __wakeup();
-  Php::Value __sleep();
+    void __construct(Php::Parameters &params);
+    void initVoIPController();
+    Php::Value discard(Php::Parameters &params);
+    Php::Value accept();
+    void deinitVoIPController();
+    void __wakeup();
+    Php::Value __sleep();
 
-  void startTheMagic();
+    void startTheMagic();
 
-  Php::Value getVisualization();
-  void setVisualization(Php::Parameters &params);
+    Php::Value getVisualization();
+    void setVisualization(Php::Parameters &params);
 
-  Php::Value play(Php::Parameters &params);
-  Php::Value playOnHold(Php::Parameters &params);
-  Php::Value setOutputFile(Php::Parameters &params);
-  Php::Value unsetOutputFile();
+    Php::Value play(Php::Parameters &params);
+    Php::Value playOnHold(Php::Parameters &params);
+    Php::Value setOutputFile(Php::Parameters &params);
+    Php::Value unsetOutputFile();
 
-  Php::Value getVersion();
-  Php::Value getPreferredRelayID();
-  Php::Value getLastError();
-  Php::Value getStats();
-  Php::Value getDebugLog();
-  Php::Value getDebugString();
-  void debugCtl(Php::Parameters &params);
+    Php::Value getVersion();
+    Php::Value getPreferredRelayID();
+    Php::Value getLastError();
+    Php::Value getStats();
+    Php::Value getDebugLog();
+    Php::Value getDebugString();
+    void debugCtl(Php::Parameters &params);
 
-  void setOutputLevel(Php::Parameters &params);
-  Php::Value setMicMute(Php::Parameters &params);
+    void setOutputLevel(Php::Parameters &params);
+    Php::Value setMicMute(Php::Parameters &params);
 
-  Php::Value getProtocol();
-  Php::Value getState();
-  Php::Value getOutputState();
-  Php::Value getInputState();
-  Php::Value getOutputParams();
-  Php::Value getInputParams();
-  Php::Value isPlaying();
-  Php::Value isDestroyed();
-  Php::Value whenCreated();
-  Php::Value isCreator();
-  Php::Value getOtherID();
-  Php::Value getCallID();
-  Php::Value getCallState();
+    Php::Value getProtocol();
+    Php::Value getState();
+    Php::Value getOutputState();
+    Php::Value getInputState();
+    Php::Value getOutputParams();
+    Php::Value getInputParams();
+    Php::Value isPlaying();
+    Php::Value isDestroyed();
+    Php::Value whenCreated();
+    Php::Value isCreator();
+    Php::Value getOtherID();
+    Php::Value getCallID();
+    Php::Value getCallState();
 
-  AudioInputModule *in;
-  AudioOutputModule *out;
+    AudioInputModule *in;
+    AudioOutputModule *out;
 
-  int state = STATE_CREATED;
-  int inputState = AUDIO_STATE_NONE;
-  int outputState = AUDIO_STATE_NONE;
+    int state = STATE_CREATED;
+    int inputState = AUDIO_STATE_NONE;
+    int outputState = AUDIO_STATE_NONE;
 
-  bool playing = false;
-  bool destroyed = false;
+    bool playing = false;
+    bool destroyed = false;
 
-  void parseConfig();
-  void parseProxyConfig();
-  std::queue<FILE *> inputFiles;
-  std::queue<FILE *> holdFiles;
-  tgvoip_mutex_t inputMutex;
-  
-  bool configuringInput;
-  FILE *outputFile;
-  tgvoip_mutex_t outputMutex;
+    void parseConfig();
+    void parseProxyConfig();
+    std::queue<FILE *> inputFiles;
+    std::queue<FILE *> holdFiles;
+    tgvoip_mutex_t inputMutex;
 
-  bool configuringOutput;
+    bool configuringInput;
+    FILE *outputFile;
+    tgvoip_mutex_t outputMutex;
+
+    bool configuringOutput;
 
 private:
-  int callState = CALL_STATE_NONE;
-  VoIPController *inst;
+    int callState = CALL_STATE_NONE;
+    VoIPController *inst;
 };
 
 #endif
