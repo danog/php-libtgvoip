@@ -110,7 +110,6 @@ Php::Value VoIP::discard(Php::Parameters &params)
             debug = params[2];
         } else debug = true;
         self["internalStorage"]["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value(), reason, rating, debug);
-        self["internalStorage"]["madeline"].value().call("handle_future_salts", self["internalStorage"]["otherID"].value());
     }
     deinitVoIPController();
     return this;
