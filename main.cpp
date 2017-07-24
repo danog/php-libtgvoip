@@ -127,6 +127,10 @@ Php::Value VoIP::accept()
 void VoIP::__wakeup()
 {
     Php::Value self(this);
+    if (!self["internalStorage"]["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto")) {
+        callState = CALL_STATE_ENDED;
+        return;
+    }
 
     callState = self["internalStorage"]["callState"].value();
     initVoIPController();
