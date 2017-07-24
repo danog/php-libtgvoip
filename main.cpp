@@ -93,6 +93,9 @@ void VoIP::deinitVoIPController() {
 
 Php::Value VoIP::discard(Php::Parameters &params)
 {
+    if (callState == CALL_STATE_ENDED) {
+        return false;
+    }
     Php::Value self(this);
     if (self["internalStorage"]["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto")) {
         Php::Array reason;
@@ -127,12 +130,12 @@ Php::Value VoIP::accept()
 void VoIP::__wakeup()
 {
     Php::Value self(this);
-    if (!self["internalStorage"]["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto")) {
+    callState = self["internalStorage"]["callState"].value();
+    if (!self["internalStorage"]["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto") || callState == CALL_STATE_READY) {
         callState = CALL_STATE_ENDED;
         return;
     }
 
-    callState = self["internalStorage"]["callState"].value();
     initVoIPController();
 
     if (self["configuration"]) {
@@ -178,6 +181,11 @@ Php::Value VoIP::getOtherID()
 {
     Php::Value self(this);
     return self["internalStorage"]["otherID"];
+}
+Php::Value VoIP::getMadeline()
+{
+    Php::Value self(this);
+    return self["internalStorage"]["madeline"];
 }
 Php::Value VoIP::getProtocol()
 {
@@ -496,6 +504,7 @@ extern "C" {
         voip.method<&VoIP::setVisualization>("setVisualization", Php::Public | Php::Final, {Php::ByVal("visualization", Php::Type::Array)});
         voip.method<&VoIP::getOtherID>("getOtherID", Php::Public | Php::Final);
         voip.method<&VoIP::getProtocol>("getProtocol", Php::Public | Php::Final);
+        voip.method<&VoIP::getMadeline>("getMadeline", Php::Public | Php::Final);
         voip.method<&VoIP::getCallID>("getCallID", Php::Public | Php::Final);
         voip.method<&VoIP::isCreator>("isCreator", Php::Public | Php::Final);
         voip.method<&VoIP::whenCreated>("whenCreated", Php::Public | Php::Final);

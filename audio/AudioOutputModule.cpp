@@ -15,6 +15,7 @@ using namespace tgvoip::audio;
 
 AudioOutputModule::AudioOutputModule(std::string deviceID, VoIPController *controller)
 {
+    isRunningThread = false;
     wrapper = (VoIP *)(controller->implData);
     wrapper->out = this;
     wrapper->outputState = AUDIO_STATE_CREATED;
@@ -23,7 +24,8 @@ AudioOutputModule::~AudioOutputModule()
 {
     wrapper->outputState = AUDIO_STATE_NONE;
     wrapper->out = NULL;
-    if (receiverThread)
+    LOGD("before check join receiverThread");
+    if (isRunningThread)
     {
         LOGD("before join receiverThread");
         join_thread(receiverThread);
@@ -53,6 +55,7 @@ void AudioOutputModule::Start()
     wrapper->outputState = AUDIO_STATE_RUNNING;
 
     LOGE("STARTING RECEIVER THREAD");
+    isRunningThread = true;
     start_thread(receiverThread, StartReceiverThread, this);
     set_thread_priority(receiverThread, get_thread_max_priority());
     set_thread_name(receiverThread, "voip-receiver");
