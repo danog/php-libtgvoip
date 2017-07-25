@@ -594,6 +594,8 @@ extern "C" {
         voip.constant("CALL_STATE_READY", CALL_STATE_READY);
         voip.constant("CALL_STATE_ENDED", CALL_STATE_ENDED);
 
+        voip.constant("PHP_LIBTGVOIP_VERSION", "1.0");
+
         Php::Namespace danog("danog");
         Php::Namespace MadelineProto("MadelineProto");
 
