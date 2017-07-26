@@ -156,7 +156,7 @@ void VoIP::startTheMagic()
 {
     inst->Connect();
     Php::Value self(this);
-    self["internalStorage"]["created"] = time(NULL);
+    self["internalStorage"]["created"] = (int64_t) time(NULL);
     callState = CALL_STATE_READY;
 }
 
