@@ -76,9 +76,9 @@ public:
 
     void setOutputLevel(Php::Parameters &params);
     Php::Value setMicMute(Php::Parameters &params);
+    Php::Value setMadeline(Php::Parameters &params);
 
     Php::Value getProtocol();
-    Php::Value getMadeline();
     Php::Value getState();
     Php::Value getOutputState();
     Php::Value getInputState();

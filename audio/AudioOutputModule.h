@@ -43,9 +43,9 @@ public:
     int outputSamplesSize;
     size_t outputCSamplesSize;
     float outputLevel = 0.0;
-    bool isRunningThread;
 
 private:
+    bool isRunningThread;
     tgvoip_thread_t receiverThread;
     VoIP *wrapper;
 };

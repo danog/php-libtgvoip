@@ -22,6 +22,7 @@ If not, see <http://www.gnu.org/licenses/>.
 #include "libtgvoip/VoIPServerConfig.h"
 #include "libtgvoip/threading.h"
 #include "libtgvoip/logging.h"
+#include "backward.hpp"
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
@@ -39,7 +40,7 @@ void VoIP::__construct(Php::Parameters &params)
     self["internalStorage"]["creator"] = params[0];
     self["internalStorage"]["otherID"] = params[1];
     self["internalStorage"]["callID"] = params[2];
-    self["internalStorage"]["madeline"] = params[3];
+    self["madeline"] = params[3];
     callState = (int) params[4];
     self["internalStorage"]["protocol"] = params[5];
 
@@ -97,7 +98,10 @@ Php::Value VoIP::discard(Php::Parameters &params)
         return false;
     }
     Php::Value self(this);
-    if (self["internalStorage"]["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto")) {
+    if (!self["configuration"]) {
+        return false;
+    }
+    if (self["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto")) {
         Php::Array reason;
         Php::Array rating;
         Php::Value debug;
@@ -112,7 +116,7 @@ Php::Value VoIP::discard(Php::Parameters &params)
         if (params.size() > 2) {
             debug = params[2];
         } else debug = true;
-        self["internalStorage"]["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value(), reason, rating, debug);
+        self["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value(), reason, rating, debug);
     }
     deinitVoIPController();
     return this;
@@ -122,7 +126,7 @@ Php::Value VoIP::accept()
 {
     callState = CALL_STATE_ACCEPTED;
     Php::Value self(this);
-    self["internalStorage"]["madeline"].value().call("accept_call", self["internalStorage"]["callID"].value());
+    self["madeline"].value().call("accept_call", self["internalStorage"]["callID"].value());
     return this;
 }
 
@@ -131,18 +135,12 @@ void VoIP::__wakeup()
 {
     Php::Value self(this);
     callState = self["internalStorage"]["callState"].value();
-    if (!self["internalStorage"]["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto") || callState == CALL_STATE_READY) {
-        callState = CALL_STATE_ENDED;
-        return;
-    }
 
     initVoIPController();
 
     if (self["configuration"]) {
         parseConfig();
     }
-    if (callState == CALL_STATE_READY) startTheMagic();
-
 }
 
 Php::Value VoIP::__sleep()
@@ -182,10 +180,10 @@ Php::Value VoIP::getOtherID()
     Php::Value self(this);
     return self["internalStorage"]["otherID"];
 }
-Php::Value VoIP::getMadeline()
+Php::Value VoIP::setMadeline(Php::Parameters &params)
 {
     Php::Value self(this);
-    return self["internalStorage"]["madeline"];
+    return self["madeline"] = params[0];
 }
 Php::Value VoIP::getProtocol()
 {
@@ -493,7 +491,7 @@ extern "C" {
     {
         // static(!) Php::Extension object that should stay in memory
         // for the entire duration of the process (that's why it's static)
-        static Php::Extension extension("php-libtgvoip", "1.0");
+        static Php::Extension extension("php-libtgvoip", "1.1");
 
         // description of the class so that PHP knows which methods are accessible
         Php::Class<VoIP> voip("VoIP");
@@ -504,7 +502,7 @@ extern "C" {
         voip.method<&VoIP::setVisualization>("setVisualization", Php::Public | Php::Final, {Php::ByVal("visualization", Php::Type::Array)});
         voip.method<&VoIP::getOtherID>("getOtherID", Php::Public | Php::Final);
         voip.method<&VoIP::getProtocol>("getProtocol", Php::Public | Php::Final);
-        voip.method<&VoIP::getMadeline>("getMadeline", Php::Public | Php::Final);
+        voip.method<&VoIP::setMadeline>("setMadeline", Php::Public | Php::Final);
         voip.method<&VoIP::getCallID>("getCallID", Php::Public | Php::Final);
         voip.method<&VoIP::isCreator>("isCreator", Php::Public | Php::Final);
         voip.method<&VoIP::whenCreated>("whenCreated", Php::Public | Php::Final);
@@ -594,7 +592,7 @@ extern "C" {
         voip.constant("CALL_STATE_READY", CALL_STATE_READY);
         voip.constant("CALL_STATE_ENDED", CALL_STATE_ENDED);
 
-        voip.constant("PHP_LIBTGVOIP_VERSION", "1.0");
+        voip.constant("PHP_LIBTGVOIP_VERSION", "1.1");
 
         Php::Namespace danog("danog");
         Php::Namespace MadelineProto("MadelineProto");

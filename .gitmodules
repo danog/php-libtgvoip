@@ -1,3 +1,6 @@
 [submodule "libtgvoip"]
 	path = libtgvoip
 	url = https://github.com/danog/libtgvoip
+[submodule "backward-cpp"]
+	path = backward-cpp
+	url = https://github.com/bombela/backward-cpp
