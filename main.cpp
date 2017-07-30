@@ -124,6 +124,7 @@ Php::Value VoIP::discard(Php::Parameters &params)
 
 Php::Value VoIP::accept()
 {
+    if (callState != CALL_STATE_INCOMING) return false;
     callState = CALL_STATE_ACCEPTED;
     Php::Value self(this);
     self["madeline"].value().call("accept_call", self["internalStorage"]["callID"].value());
@@ -135,6 +136,7 @@ void VoIP::__wakeup()
 {
     Php::Value self(this);
     callState = self["internalStorage"]["callState"].value();
+    if (callState == CALL_STATE_ENDED) return;
 
     initVoIPController();
 
