@@ -134,22 +134,12 @@ Php::Value VoIP::accept()
 
 void VoIP::__wakeup()
 {
-    Php::Value self(this);
-    callState = self["internalStorage"]["callState"].value();
-    if (callState == CALL_STATE_ENDED) return;
-
-    initVoIPController();
-
-    if (self["configuration"]) {
-        parseConfig();
-    }
+    callState = CALL_STATE_ENDED;
 }
 
 Php::Value VoIP::__sleep()
 {
-    Php::Value self(this);
-    self["internalStorage"]["callState"] = callState;
-    Php::Array res({"internalStorage", "storage", "configuration"});
+    Php::Array res({});
     return res;
 }
 
