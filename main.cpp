@@ -101,7 +101,7 @@ Php::Value VoIP::discard(Php::Parameters &params)
     if (!self["configuration"]) {
         return false;
     }
-    if (self["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto")) {
+    if (self["madeline"] && self["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto")) {
         Php::Array reason;
         Php::Array rating;
         Php::Value debug;
@@ -127,7 +127,21 @@ Php::Value VoIP::accept()
     if (callState != CALL_STATE_INCOMING) return false;
     callState = CALL_STATE_ACCEPTED;
     Php::Value self(this);
-    self["madeline"].value().call("accept_call", self["internalStorage"]["callID"].value());
+    if (self["madeline"].value().call("accept_call", self["internalStorage"]["callID"].value()) == false) {
+        if (!self["configuration"]) {
+            return false;
+        }
+        if (self["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto")) {
+            Php::Array reason;
+            Php::Array rating;
+            Php::Value debug;
+            reason["_"] = "phoneCallDiscardReasonDisconnect";
+            debug = false;
+            self["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value(), reason, rating, debug);
+        }
+        deinitVoIPController();
+        return false;
+    }
     return this;
 }
 
@@ -139,7 +153,7 @@ void VoIP::__wakeup()
 
 Php::Value VoIP::__sleep()
 {
-    Php::Array res({});
+    Php::Array res;
     return res;
 }
 
