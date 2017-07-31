@@ -56,7 +56,7 @@ public:
     void __wakeup();
     Php::Value __sleep();
 
-    void startTheMagic();
+    Php::Value startTheMagic();
 
     Php::Value getVisualization();
     void setVisualization(Php::Parameters &params);

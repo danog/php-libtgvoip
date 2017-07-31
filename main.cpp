@@ -22,7 +22,6 @@ If not, see <http://www.gnu.org/licenses/>.
 #include "libtgvoip/VoIPServerConfig.h"
 #include "libtgvoip/threading.h"
 #include "libtgvoip/logging.h"
-#include "backward.hpp"
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
@@ -158,12 +157,28 @@ Php::Value VoIP::__sleep()
 }
 
 
-void VoIP::startTheMagic()
+Php::Value VoIP::startTheMagic()
 {
-    inst->Connect();
     Php::Value self(this);
+    if (state==STATE_WAIT_INIT_ACK) {
+        if (!self["configuration"]) {
+            return false;
+        }
+        if (self["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto")) {
+            Php::Array reason;
+            Php::Array rating;
+            Php::Value debug;
+            reason["_"] = "phoneCallDiscardReasonDisconnect";
+            debug = false;
+            self["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value(), reason, rating, debug);
+        }
+        deinitVoIPController();
+        return false;
+    }
+    inst->Connect();
     self["internalStorage"]["created"] = (int64_t) time(NULL);
     callState = CALL_STATE_READY;
+    return true;
 }
 
 Php::Value VoIP::whenCreated()
@@ -497,7 +512,7 @@ extern "C" {
     {
         // static(!) Php::Extension object that should stay in memory
         // for the entire duration of the process (that's why it's static)
-        static Php::Extension extension("php-libtgvoip", "1.1");
+        static Php::Extension extension("php-libtgvoip", "1.1.1");
 
         // description of the class so that PHP knows which methods are accessible
         Php::Class<VoIP> voip("VoIP");
@@ -598,7 +613,7 @@ extern "C" {
         voip.constant("CALL_STATE_READY", CALL_STATE_READY);
         voip.constant("CALL_STATE_ENDED", CALL_STATE_ENDED);
 
-        voip.constant("PHP_LIBTGVOIP_VERSION", "1.1");
+        voip.constant("PHP_LIBTGVOIP_VERSION", "1.1.1");
 
         Php::Namespace danog("danog");
         Php::Namespace MadelineProto("MadelineProto");
