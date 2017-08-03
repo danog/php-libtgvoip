@@ -1,5 +1,25 @@
 {
     "version": "0.2.0",
-    "configurations": [],
+    "configurations": [
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/bin/php",
+            "args": ["magna.php"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceRoot}/../MadelineProto",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ],
     "compounds": []
 }
