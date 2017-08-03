@@ -392,9 +392,15 @@ Php::Value VoIP::setMicMute(Php::Parameters &params)
 }
 
 
-void VoIP::debugCtl(Php::Parameters &params)
+Php::Value VoIP::debugCtl(Php::Parameters &params)
 {
-    inst->DebugCtl(params[0], params[1]);
+    inst->DebugCtl((int) params[0], (int) params[1]);
+    return this;
+}
+Php::Value VoIP::setBitrate(Php::Parameters &params)
+{
+    inst->DebugCtl(1, (int) params[0]);
+    return this;
 }
 
 Php::Value VoIP::getDebugLog()
@@ -563,6 +569,7 @@ extern "C" {
         voip.method<&VoIP::setOutputFile>("setOutputFile", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
         voip.method<&VoIP::unsetOutputFile>("unsetOutputFile", Php::Public | Php::Final);
 
+        voip.method<&VoIP::setBitrate>("setBitrate", Php::Public | Php::Final, {Php::ByVal("bitrate", Php::Type::Numeric)});
 
         voip.property("configuration", 0, Php::Public);
         voip.property("storage", 0, Php::Public);

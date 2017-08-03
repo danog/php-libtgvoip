@@ -72,7 +72,8 @@ public:
     Php::Value getStats();
     Php::Value getDebugLog();
     Php::Value getDebugString();
-    void debugCtl(Php::Parameters &params);
+    Php::Value debugCtl(Php::Parameters &params);
+    Php::Value setBitrate(Php::Parameters &params);
 
     void setOutputLevel(Php::Parameters &params);
     Php::Value setMicMute(Php::Parameters &params);
