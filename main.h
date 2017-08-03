@@ -112,7 +112,7 @@ public:
     bool configuringInput;
     FILE *outputFile;
     tgvoip_mutex_t outputMutex;
-
+    int otherID;
     bool configuringOutput;
 
 private:

@@ -37,7 +37,7 @@ void VoIP::__construct(Php::Parameters &params)
     self["internalStorage"] = empty;
 
     self["internalStorage"]["creator"] = params[0];
-    self["internalStorage"]["otherID"] = params[1];
+    otherID = (int) params[1];
     self["internalStorage"]["callID"] = params[2];
     self["madeline"] = params[3];
     callState = (int) params[4];
@@ -198,8 +198,7 @@ Php::Value VoIP::isCreator()
 }
 Php::Value VoIP::getOtherID()
 {
-    Php::Value self(this);
-    return self["internalStorage"]["otherID"];
+    return otherID;
 }
 Php::Value VoIP::setMadeline(Php::Parameters &params)
 {
