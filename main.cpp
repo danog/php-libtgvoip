@@ -237,6 +237,8 @@ void VoIP::setVisualization(Php::Parameters &params)
 
 void VoIP::parseConfig() {
     Php::Value self(this);
+    if (!self["configuration"]["auth_key"]) return;
+
     voip_config_t cfg;
     cfg.recv_timeout = (double) self["configuration"]["recv_timeout"];
     cfg.init_timeout = (double) self["configuration"]["init_timeout"];
