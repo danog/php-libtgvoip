@@ -32,7 +32,8 @@ void VoIP::__construct(Php::Parameters &params)
     Php::Value self(this);
     Php::Array empty;
 
-    self["configuration"] = empty;
+    self["configuration"]["endpoints"] = empty;
+    self["configuration"]["shared_config"] = empty;
     self["storage"] = empty;
     self["internalStorage"] = empty;
 
@@ -266,9 +267,9 @@ void VoIP::parseConfig() {
     {
         memset(cfg.statsDumpFilePath, 0, sizeof(cfg.statsDumpFilePath));
     }
-    inst->SetConfig(&cfg);
     Php::Value shared_config = self["configuration"]["shared_config"];
     ServerConfig::GetSharedInstance()->Update(shared_config);
+    inst->SetConfig(&cfg);
 
     char *key = (char *) malloc(256);
     memcpy(key, self["configuration"]["auth_key"], 256);
