@@ -520,7 +520,7 @@ extern "C" {
     {
         // static(!) Php::Extension object that should stay in memory
         // for the entire duration of the process (that's why it's static)
-        static Php::Extension extension("php-libtgvoip", "1.1.1");
+        static Php::Extension extension("php-libtgvoip", "1.1.2");
 
         // description of the class so that PHP knows which methods are accessible
         Php::Class<VoIP> voip("VoIP");
@@ -622,7 +622,7 @@ extern "C" {
         voip.constant("CALL_STATE_READY", CALL_STATE_READY);
         voip.constant("CALL_STATE_ENDED", CALL_STATE_ENDED);
 
-        voip.constant("PHP_LIBTGVOIP_VERSION", "1.1.1");
+        voip.constant("PHP_LIBTGVOIP_VERSION", "1.1.2");
 
         Php::Namespace danog("danog");
         Php::Namespace MadelineProto("MadelineProto");
