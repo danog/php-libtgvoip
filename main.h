@@ -72,6 +72,7 @@ public:
     Php::Value getStats();
     Php::Value getDebugLog();
     Php::Value getDebugString();
+    Php::Value getSignalBarsCount();
     Php::Value debugCtl(Php::Parameters &params);
     Php::Value setBitrate(Php::Parameters &params);
 

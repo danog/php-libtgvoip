@@ -420,6 +420,12 @@ Php::Value VoIP::getVersion()
     return VoIPController::GetVersion();
 }
 
+Php::Value VoIP::getSignalBarsCount()
+{
+    return VoIPController::getSignalBarsCount();
+}
+
+
 Php::Value VoIP::getPreferredRelayID()
 {
     return inst->GetPreferredRelayID();
@@ -560,6 +566,7 @@ extern "C" {
         voip.method<&VoIP::getLastError>("getLastError", Php::Public | Php::Final);
         voip.method<&VoIP::getPreferredRelayID>("getPreferredRelayID", Php::Public | Php::Final);
         voip.method<&VoIP::getVersion>("getVersion", Php::Public | Php::Final);
+        voip.method<&VoIP::getSignalBarsCount>("getSignalBarsCount", Php::Public | Php::Final);
         voip.method<&VoIP::getDebugString>("getDebugString", Php::Public | Php::Final);
         voip.method<&VoIP::getStats>("getStats", Php::Public | Php::Final);
         voip.method<&VoIP::startTheMagic>("startTheMagic", Php::Public | Php::Final);
