@@ -422,7 +422,7 @@ Php::Value VoIP::getVersion()
 
 Php::Value VoIP::getSignalBarsCount()
 {
-    return VoIPController::getSignalBarsCount();
+    return inst->GetSignalBarsCount();
 }
 
 
