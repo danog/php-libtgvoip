@@ -31,6 +31,7 @@
         "sstream": "cpp",
         "streambuf": "cpp",
         "vector": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "string_view": "cpp"
     }
 }
