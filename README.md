@@ -1,4 +1,6 @@
 # php-libtgvoip
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdanog%2Fphp-libtgvoip.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdanog%2Fphp-libtgvoip?ref=badge_shield)
+
 
 Licensed under AGPLV3, created by Daniil Gentili.
 
@@ -19,3 +21,7 @@ sudo apt-get install libopus-dev binutils-dev libssl-dev && git clone https://gi
 
 
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdanog%2Fphp-libtgvoip.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdanog%2Fphp-libtgvoip?ref=badge_large)
