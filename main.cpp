@@ -273,7 +273,8 @@ void VoIP::parseConfig() {
         memset(cfg.statsDumpFilePath, 0, sizeof(cfg.statsDumpFilePath));
     }
     Php::Value shared_config = self["configuration"]["shared_config"];
-    ServerConfig::GetSharedInstance()->Update(shared_config);
+    std::map<std::string, std::string> copyconfig(shared_config);
+    ServerConfig::GetSharedInstance()->Update(copyconfig);
     inst->SetConfig(&cfg);
 
     char *key = (char *) malloc(256);
@@ -304,6 +305,7 @@ void VoIP::parseConfig() {
         }
 
         eps.push_back(Endpoint(endpoints[i]["id"], (int32_t)endpoints[i]["port"], v4addr, v6addr, EP_TYPE_UDP_RELAY, pTag));
+        eps.push_back(Endpoint(endpoints[i]["id"], (int32_t)endpoints[i]["port"], v4addr, v6addr, EP_TYPE_TCP_RELAY, pTag));
         free(pTag);
     }
 
