@@ -75,6 +75,7 @@ void *AudioInputModule::StartSenderThread(void *input)
 
 void AudioInputModule::RunSenderThread()
 {
+    LOGW("===== php-libtgvoip sender thread started =====");
     unsigned char *data = (unsigned char *)malloc(inputCSamplesSize);
     size_t read;
     double time = VoIPController::GetCurrentTime();
@@ -93,7 +94,6 @@ void AudioInputModule::RunSenderThread()
                 usleep(sleeptime);
             }
             time = VoIPController::GetCurrentTime();
-
             if (!wrapper->inputFiles.empty())
             {
                 if ((read = fread(data, sizeof(unsigned char), inputSamplesSize, wrapper->inputFiles.front())) != inputCSamplesSize)

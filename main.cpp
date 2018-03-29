@@ -70,8 +70,9 @@ void VoIP::initVoIPController() {
 void VoIP::deinitVoIPController() {
     if (callState != CALL_STATE_ENDED) {
         callState = CALL_STATE_ENDED;
-        delete inst;
-
+        if (inst) {
+            delete inst;
+        }
         lock_mutex(inputMutex);
         unlock_mutex(inputMutex);
         free_mutex(inputMutex);
@@ -165,8 +166,8 @@ Php::Value VoIP::__sleep()
 
 Php::Value VoIP::startTheMagic()
 {
-    Php::Value self(this);
     if (state==STATE_WAIT_INIT_ACK) {
+        Php::Value self(this);
         if (!self["configuration"]) {
             return false;
         }
@@ -181,7 +182,9 @@ Php::Value VoIP::startTheMagic()
         deinitVoIPController();
         return false;
     }
+    //inst->Start();
     inst->Connect();
+    Php::Value self(this);
     self["internalStorage"]["created"] = (int64_t) time(NULL);
     callState = CALL_STATE_READY;
     return true;
