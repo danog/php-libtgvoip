@@ -18,10 +18,6 @@ On Ubuntu/debian/any debian-based distro:
 sudo apt-get install libopus-dev libssl-dev && git clone https://github.com/CopernicaMarketingSoftware/PHP-CPP && cd PHP-CPP && make -j$(nproc) && sudo make install && cd .. && git clone --recursive https://github.com/danog/php-libtgvoip && cd php-libtgvoip && make -j$(nproc) && sudo make install
 ```
 
+## Documentation
 
-
-
-
-
-## License
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdanog%2Fphp-libtgvoip.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdanog%2Fphp-libtgvoip?ref=badge_large)
+https://docs.madelineproto.xyz/docs/CALLS.html
