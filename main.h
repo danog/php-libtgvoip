@@ -8,6 +8,7 @@ See the GNU Affero General Public License for more details.
 You should have received a copy of the GNU General Public License along with php-libtgvoip.
 If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef PHPLIBTGVOIP_H
 #define PHPLIBTGVOIP_H
 
@@ -34,6 +35,10 @@ If not, see <http://www.gnu.org/licenses/>.
 #define CALL_STATE_READY 4
 #define CALL_STATE_ENDED 5
 
+#ifndef TGVOIP_USE_CALLBACK_AUDIO_IO
+#define TGVOIP_USE_CALLBACK_AUDIO_IO
+#endif
+
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
@@ -58,6 +63,9 @@ public:
 
     Php::Value startTheMagic();
 
+    void recvAudioFrame(int16_t* data, size_t size);
+    void sendAudioFrame(int16_t* data, size_t size);
+
     Php::Value getVisualization();
     void setVisualization(Php::Parameters &params);
 
@@ -76,16 +84,11 @@ public:
     Php::Value debugCtl(Php::Parameters &params);
     Php::Value setBitrate(Php::Parameters &params);
 
-    void setOutputLevel(Php::Parameters &params);
     Php::Value setMicMute(Php::Parameters &params);
     Php::Value setMadeline(Php::Parameters &params);
 
     Php::Value getProtocol();
     Php::Value getState();
-    Php::Value getOutputState();
-    Php::Value getInputState();
-    Php::Value getOutputParams();
-    Php::Value getInputParams();
     Php::Value isPlaying();
     Php::Value isDestroyed();
     Php::Value whenCreated();
@@ -95,29 +98,26 @@ public:
     Php::Value getCallState();
     Php::Value close();
 
-    AudioInputModule *in;
-    AudioOutputModule *out;
 
     int state = STATE_CREATED;
-    int inputState = AUDIO_STATE_NONE;
-    int outputState = AUDIO_STATE_NONE;
 
     bool playing = false;
     bool destroyed = false;
 
     void parseConfig();
     void parseProxyConfig();
-    std::queue<FILE *> inputFiles;
-    std::queue<FILE *> holdFiles;
-    tgvoip_mutex_t inputMutex;
-
-    bool configuringInput;
-    FILE *outputFile;
-    tgvoip_mutex_t outputMutex;
     int otherID;
-    bool configuringOutput;
 
 private:
+    std::queue<FILE *> inputFiles;
+    std::queue<FILE *> holdFiles;
+    Mutex inputMutex;
+
+    FILE *outputFile;
+    Mutex outputMutex;
+
+    size_t readInput;
+    size_t readOutput;
     int callState = CALL_STATE_NONE;
     VoIPController *inst;
 };

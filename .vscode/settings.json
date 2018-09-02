@@ -32,6 +32,15 @@
         "streambuf": "cpp",
         "vector": "cpp",
         "queue": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "atomic": "cpp",
+        "ctime": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "unordered_map": "cpp",
+        "fstream": "cpp",
+        "iostream": "cpp",
+        "optional": "cpp",
+        "algorithm": "cpp"
     }
 }
