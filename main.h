@@ -81,6 +81,9 @@ public:
     Php::Value getDebugLog();
     Php::Value getDebugString();
     Php::Value getSignalBarsCount();
+    Php::Value getPeerCapabilities();
+    void requestCallUpgrade();
+    void sendGroupCallKey(Php::Parameters &params);
     Php::Value debugCtl(Php::Parameters &params);
     Php::Value setBitrate(Php::Parameters &params);
 

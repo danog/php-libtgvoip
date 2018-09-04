@@ -65,7 +65,7 @@ void VoIP::initVoIPController()
     callbacks.upgradeToGroupCallRequested = NULL;
     inst->SetCallbacks(callbacks);
     inst->SetAudioDataCallbacks([this](int16_t *buffer, size_t size) { this->sendAudioFrame(buffer, size); }, [this](int16_t *buffer, size_t size) { this->recvAudioFrame(buffer, size); });
-    inst->Start();
+
 }
 
 void VoIP::deinitVoIPController()
@@ -73,10 +73,11 @@ void VoIP::deinitVoIPController()
     if (callState != CALL_STATE_ENDED)
     {
         callState = CALL_STATE_ENDED;
-        inst->Stop();
         if (inst)
         {
+            inst->Stop();
             delete inst;
+            inst=NULL;
         }
 
         while (holdFiles.size())
@@ -141,10 +142,10 @@ Php::Value VoIP::discard(Php::Parameters &params)
         return false;
     }
     Php::Value self(this);
-    if (!self["configuration"])
+    /*if (!self["configuration"]["auth_key"])
     {
         return false;
-    }
+    }*/
     if (self["madeline"] && self["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto"))
     {
         Php::Array reason;
@@ -168,6 +169,7 @@ Php::Value VoIP::discard(Php::Parameters &params)
         }
         else
             debug = true;
+
         self["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value(), reason, rating, debug);
     }
     deinitVoIPController();
@@ -239,7 +241,7 @@ Php::Value VoIP::startTheMagic()
         deinitVoIPController();
         return false;
     }
-    //inst->Start();
+    inst->Start();
     inst->Connect();
     Php::Value self(this);
     self["internalStorage"]["created"] = (int64_t)time(NULL);
@@ -499,14 +501,30 @@ Php::Value VoIP::getDebugString()
 }
 Php::Value VoIP::getStats()
 {
+    Php::Value stats;
     VoIPController::TrafficStats _stats;
     inst->GetStats(&_stats);
-    Php::Value stats;
     stats["bytesSentWifi"] = (int64_t)_stats.bytesSentWifi;
     stats["bytesSentMobile"] = (int64_t)_stats.bytesSentMobile;
     stats["bytesRecvdWifi"] = (int64_t)_stats.bytesRecvdWifi;
     stats["bytesRecvdMobile"] = (int64_t)_stats.bytesRecvdMobile;
     return stats;
+}
+
+Php::Value VoIP::getPeerCapabilities()
+{
+    return (int64_t) inst->GetPeerCapabilities();
+}
+void VoIP::requestCallUpgrade()
+{
+    return inst->RequestCallUpgrade();
+}
+
+void VoIP::sendGroupCallKey(Php::Parameters &params)
+{
+    unsigned char *key = (unsigned char *)malloc(256);
+    memcpy(key, params[0], 256);
+    inst->SendGroupCallKey(key);
 }
 
 Php::Value VoIP::getState()
@@ -573,6 +591,9 @@ extern "C"
         voip.method<&VoIP::getSignalBarsCount>("getSignalBarsCount", Php::Public | Php::Final);
         voip.method<&VoIP::getDebugString>("getDebugString", Php::Public | Php::Final);
         voip.method<&VoIP::getStats>("getStats", Php::Public | Php::Final);
+        voip.method<&VoIP::getPeerCapabilities>("getPeerCapabilities", Php::Public | Php::Final);
+        voip.method<&VoIP::sendGroupCallKey>("sendGroupCallKey", Php::Public | Php::Final, {Php::ByVal("key", Php::Type::String)});
+        voip.method<&VoIP::requestCallUpgrade>("requestCallUpgrade", Php::Public | Php::Final);
         voip.method<&VoIP::startTheMagic>("startTheMagic", Php::Public | Php::Final);
 
         voip.method<&VoIP::play>("then", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
