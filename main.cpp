@@ -345,7 +345,7 @@ void VoIP::parseConfig()
     if (self["configuration"]["shared_config"])
     {
         Php::Value shared_config = self["configuration"]["shared_config"];
-        ServerConfig::GetSharedInstance()->Update(Php::call("json_encode", Php::call("array_merge", VoIPServerConfig::getDefault(), shared_config)));
+        ServerConfig::GetSharedInstance()->Update(Php::call("json_encode", Php::call("array_merge", Php::call("\\danog\\MadelineProto\\VoIPServerConfig::getFinal"), shared_config)));
     }
     inst->SetConfig(cfg);
 
@@ -551,32 +551,11 @@ Php::Value VoIP::isPlaying()
     return playing;
 }
 
-void VoIPServerConfig::update(Php::Parameters &params)
+void VoIPServerConfigInternal::update(Php::Parameters &params)
 {
-    Php::Value copyCustom = params[0];
-    config = copyCustom;
-
-    ServerConfig::GetSharedInstance()->Update(Php::call("json_encode", Php::call("array_merge", configDefault, config)));
+    Php::Array settings = params[0];
+    ServerConfig::GetSharedInstance()->Update(Php::call("json_encode", settings));
 }
-
-Php::Value VoIPServerConfig::get()
-{
-    return config;
-}
-
-void VoIPServerConfig::updateDefault(Php::Parameters &params)
-{
-    Php::Value copyDefault = params[0];
-    configDefault = copyDefault;
-
-    ServerConfig::GetSharedInstance()->Update(Php::call("json_encode", Php::call("array_merge", configDefault, config)));
-}
-
-Php::Value VoIPServerConfig::getDefault()
-{
-    return configDefault;
-}
-
 extern "C"
 {
 
@@ -593,12 +572,8 @@ extern "C"
         // for the entire duration of the process (that's why it's static)
         static Php::Extension extension("php-libtgvoip", "1.1.2");
 
-
-        Php::Class<VoIP> voipServerConfig("VoIPServerConfig");
-        voipServerConfig.method<&VoIPServerConfig::update>("update", Php::Public);
-        voipServerConfig.method<&VoIPServerConfig::get>("get", Php::Public);
-        voipServerConfig.method<&VoIPServerConfig::updateDefault>("updateDefault", Php::Public);
-        voipServerConfig.method<&VoIPServerConfig::getDefault>("getDefault", Php::Public);
+        Php::Class<VoIPServerConfigInternal> voipServerConfigInternal("VoIPServerConfigInternal");
+        voipServerConfigInternal.method<&VoIPServerConfigInternal::update>("updateInternal", Php::Protected | Php::Static, {Php::ByVal("config", Php::Type::Array)});
 
         // description of the class so that PHP knows which methods are accessible
         Php::Class<VoIP> voip("VoIP");
@@ -710,7 +685,7 @@ extern "C"
         Php::Namespace danog("danog");
         Php::Namespace MadelineProto("MadelineProto");
 
-        MadelineProto.add(move(voipServerConfig));
+        MadelineProto.add(move(voipServerConfigInternal));
         MadelineProto.add(move(voip));
         danog.add(move(MadelineProto));
         extension.add(move(danog));

@@ -73,16 +73,10 @@ class AudioOutputModule;
 }
 
 
-class VoIPServerConfig : public Php::Base
+class VoIPServerConfigInternal : public Php::Base
 {
 public:
     static void update(Php::Parameters &params);
-    static Php::Value get();
-    static void updateDefault(Php::Parameters &params);
-    static Php::Value getDefault();
-private:
-    static Php::Array config;
-    static Php::Array configDefault;
 };
 
 class VoIP : public Php::Base
