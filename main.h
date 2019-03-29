@@ -12,6 +12,30 @@ If not, see <http://www.gnu.org/licenses/>.
 #ifndef PHPLIBTGVOIP_H
 #define PHPLIBTGVOIP_H
 
+#ifndef TGVOIP_USE_CALLBACK_AUDIO_IO
+#define TGVOIP_USE_CALLBACK_AUDIO_IO
+#endif
+
+#ifndef WEBRTC_LINUX
+#define WEBRTC_LINUX
+#endif
+
+#ifndef WEBRTC_POSIX
+#define WEBRTC_POSIX
+#endif
+
+#ifndef TGVOIP_USE_DESKTOP_DSP
+#define TGVOIP_USE_DESKTOP_DSP
+#endif
+
+#ifndef WEBRTC_APM_DEBUG_DUMP
+#define WEBRTC_APM_DEBUG_DUMP 0
+#endif
+
+#ifndef WEBRTC_NS_FLOAT
+#define WEBRTC_NS_FLOAT
+#endif
+
 #include "libtgvoip/VoIPController.h"
 /*
 #include <php.h>
@@ -35,9 +59,6 @@ If not, see <http://www.gnu.org/licenses/>.
 #define CALL_STATE_READY 4
 #define CALL_STATE_ENDED 5
 
-#ifndef TGVOIP_USE_CALLBACK_AUDIO_IO
-#define TGVOIP_USE_CALLBACK_AUDIO_IO
-#endif
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
@@ -50,10 +71,25 @@ class AudioInputModule;
 class AudioOutputModule;
 }
 }
+
+
+class VoIPServerConfig : public Php::Base
+{
+public:
+    static void update(Php::Parameters &params);
+    static Php::Value get();
+    static void updateDefault(Php::Parameters &params);
+    static Php::Value getDefault();
+private:
+    static Php::Array config;
+    static Php::Array configDefault;
+};
+
 class VoIP : public Php::Base
 {
 public:
     void __construct(Php::Parameters &params);
+    void setCall(Php::Parameters &params);
     void initVoIPController();
     Php::Value discard(Php::Parameters &params);
     Php::Value accept();
@@ -82,6 +118,7 @@ public:
     Php::Value getDebugString();
     Php::Value getSignalBarsCount();
     Php::Value getPeerCapabilities();
+    static Php::Value getConnectionMaxLayer();
     void requestCallUpgrade();
     void sendGroupCallKey(Php::Parameters &params);
     Php::Value debugCtl(Php::Parameters &params);
