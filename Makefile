@@ -115,7 +115,7 @@ MKDIR					=	mkdir -p
 #	file, with the .cpp extension being replaced by .o.
 #
 
-
+TGVOIP				=	libtgvoip/build/libtgvoip.la
 SOURCES				=	$(wildcard *.cpp)
 OBJECTS_CPP			=	$(SOURCES:%.cpp=%.o)
 OBJECTS_CC			=	$(OBJECTS_CPP:%.cc=%.o)
@@ -125,10 +125,10 @@ OBJECTS				=	$(OBJECTS_CC:%.c=%.o)
 #	From here the build instructions start
 #
 
-all:					tgvoip ${OBJECTS} ${EXTENSION}
+all:					${TGVOIP} ${OBJECTS} ${EXTENSION}
 
-tgvoip:
-					cd libtgvoip && autoconf && ${MKDIR} build && cd build && ../configure --enable-desktop-dsp --enable-opus-music --enable-audio-callback --prefix=/usr && make -j$(shell nproc) && sudo make install && cd ../..
+${TGVOIP}:
+					cd libtgvoip && autoreconf -vfi && ${MKDIR} build && cd build && bash -x ../configure --enable-desktop-dsp --enable-opus-music --enable-audio-callback --prefix=/usr && make -j$(shell nproc) && sudo make install && cd ../..
 
 ${EXTENSION}:				${OBJECTS}
 					${CXX} -o $@ ${OBJECTS} ${LFLAGS}
