@@ -680,7 +680,7 @@ extern "C"
 
         voip.constant("TGVOIP_PEER_CAP_GROUP_CALLS", TGVOIP_PEER_CAP_GROUP_CALLS);
 
-        voip.constant("PHP_LIBTGVOIP_VERSION", "1.2.0");
+        voip.constant("PHP_LIBTGVOIP_VERSION", "1.3.0");
 
         Php::Namespace danog("danog");
         Php::Namespace MadelineProto("MadelineProto");
