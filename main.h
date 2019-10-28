@@ -147,13 +147,13 @@ private:
     std::queue<FILE *> holdFiles;
     Mutex inputMutex;
 
-    FILE *outputFile;
+    FILE *outputFile = NULL;
     Mutex outputMutex;
 
     size_t readInput;
     size_t readOutput;
     int callState = CALL_STATE_NONE;
-    VoIPController *inst;
+    VoIPController *inst = NULL;
 };
 
 #endif
