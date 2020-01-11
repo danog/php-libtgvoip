@@ -180,7 +180,7 @@ Php::Value VoIP::discard(Php::Parameters &params)
         else
             debug = true;
 
-        self["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value(), reason, rating, debug);
+        self["madeline"].value().call("discardCall", self["internalStorage"]["callID"].value(), reason, rating, debug);
     }
     deinitVoIPController();
     return this;
@@ -192,7 +192,7 @@ Php::Value VoIP::accept()
         return false;
     callState = CALL_STATE_ACCEPTED;
     Php::Value self(this);
-    if (self["madeline"].value().call("accept_call", self["internalStorage"]["callID"].value()) == false)
+    if (self["madeline"].value().call("acceptCall", self["internalStorage"]["callID"].value()) == false)
     {
         if (!self["configuration"])
         {
@@ -205,7 +205,7 @@ Php::Value VoIP::accept()
             Php::Value debug;
             reason["_"] = "phoneCallDiscardReasonDisconnect";
             debug = false;
-            self["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value(), reason, rating, debug);
+            self["madeline"].value().call("discardCall", self["internalStorage"]["callID"].value(), reason, rating, debug);
         }
         deinitVoIPController();
         return false;
@@ -246,7 +246,7 @@ Php::Value VoIP::startTheMagic()
             Php::Value debug;
             reason["_"] = "phoneCallDiscardReasonDisconnect";
             debug = false;
-            self["madeline"].value().call("discard_call", self["internalStorage"]["callID"].value(), reason, rating, debug);
+            self["madeline"].value().call("discardCall", self["internalStorage"]["callID"].value(), reason, rating, debug);
         }
         deinitVoIPController();
         return false;
@@ -680,7 +680,7 @@ extern "C"
 
         voip.constant("TGVOIP_PEER_CAP_GROUP_CALLS", TGVOIP_PEER_CAP_GROUP_CALLS);
 
-        voip.constant("PHP_LIBTGVOIP_VERSION", "1.3.0");
+        voip.constant("PHP_LIBTGVOIP_VERSION", "1.4.0");
 
         Php::Namespace danog("danog");
         Php::Namespace MadelineProto("MadelineProto");
