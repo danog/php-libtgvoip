@@ -287,7 +287,6 @@ Php::Value VoIP::getVisualization()
 {
     Php::Value self(this);
     Php::Value internalStorage = self["internalStorage"].value();
-    Php::call("var_dump", internalStorage["visualization"]);
     if (internalStorage["visualization"])
     {
         return internalStorage["visualization"].value();
@@ -300,7 +299,6 @@ void VoIP::setVisualization(Php::Parameters &params)
     Php::Value internalStorage = self["internalStorage"].value();
     internalStorage["visualization"] = params[0];
     self["internalStorage"] = internalStorage;
-    Php::call("var_dump", internalStorage);
 }
 
 void VoIP::parseConfig()
