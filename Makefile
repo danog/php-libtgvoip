@@ -10,9 +10,9 @@
 include $(CLEAR_VARS)
 
 DEFINES			=	
-INCLUDES		=	
+INCLUDES		=	-Ilibtgvoip
 LDINCLUDES		=	
-CXXFLAGS		=	${INCLUDES} ${DEFINES} -O3 -Wall -c -std=c++11 -fpic -g
+CXXFLAGS		=	${INCLUDES} ${DEFINES} -O3 -Wall -c -std=c++17 -fpic -g
 CFLAGS			=	${INCLUDES} ${DEFINES} -O3 -fexceptions -fpic -g
 
 LFLAGS		=	-shared ${LDINCLUDES} -ltgvoip -lphpcpp

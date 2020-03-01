@@ -43,7 +43,7 @@ If not, see <http://www.gnu.org/licenses/>.
 #include <ext/standard/info.h>*/
 #include <phpcpp.h>
 #include <stdio.h>
-#include "libtgvoip/threading.h"
+#include "libtgvoip/tools/threading.h"
 #include <queue>
 
 #define AUDIO_STATE_NONE -1
@@ -153,7 +153,8 @@ private:
     size_t readInput;
     size_t readOutput;
     int callState = CALL_STATE_NONE;
-    VoIPController *inst = NULL;
+    
+    VoIPController inst;
 };
 
 #endif

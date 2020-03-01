@@ -18,8 +18,8 @@ If not, see <http://www.gnu.org/licenses/>.
 #include <queue>
 
 #include "libtgvoip/VoIPServerConfig.h"
-#include "libtgvoip/threading.h"
-#include "libtgvoip/logging.h"
+#include "libtgvoip/tools/threading.h"
+#include "libtgvoip/tools/logging.h"
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
@@ -49,19 +49,20 @@ void VoIP::setCall(Php::Parameters &params)
     Php::Value callId = call["id"];
     Php::Value callAccessHash = call["access_hash"];
     Php::Value protocol = params[0]["protocol"];
-    self["internalStorage"]["callID"] = empty;
-    self["internalStorage"]["callID"]["_"] = "inputPhoneCall";
-    self["internalStorage"]["callID"]["id"] = callId;
-    self["internalStorage"]["callID"]["access_hash"] = callAccessHash;
+
+    Php::Array callArray;
+    callArray["_"] = "inputPhoneCall";
+    callArray["id"] = callId;
+    callArray["access_hash"] = callAccessHash;
+
+    self["internalStorage"]["callID"] = callArray;
     self["internalStorage"]["protocol"] = protocol;
 }
 void VoIP::initVoIPController()
 {
-    inst = new VoIPController();
-
     outputFile = NULL;
 
-    inst->implData = (void *)this;
+    inst.implData = (void *)this;
     VoIPController::Callbacks callbacks;
     callbacks.connectionStateChanged = [](VoIPController *controller, int state) {
         ((VoIP *)controller->implData)->state = state;
@@ -74,8 +75,8 @@ void VoIP::initVoIPController()
     callbacks.groupCallKeySent = NULL;
     callbacks.groupCallKeyReceived = NULL;
     callbacks.upgradeToGroupCallRequested = NULL;
-    inst->SetCallbacks(callbacks);
-    inst->SetAudioDataCallbacks([this](int16_t *buffer, size_t size) { this->sendAudioFrame(buffer, size); }, [this](int16_t *buffer, size_t size) { this->recvAudioFrame(buffer, size); });
+    inst.SetCallbacks(callbacks);
+    inst.SetAudioDataCallbacks([this](int16_t *buffer, size_t size) { this->sendAudioFrame(buffer, size); }, [this](int16_t *buffer, size_t size) { this->recvAudioFrame(buffer, size); }, [](int16_t *, size_t) {});
 }
 
 void VoIP::deinitVoIPController()
@@ -83,12 +84,7 @@ void VoIP::deinitVoIPController()
     if (callState != CALL_STATE_ENDED)
     {
         callState = CALL_STATE_ENDED;
-        if (inst)
-        {
-            inst->Stop();
-            delete inst;
-            inst = NULL;
-        }
+        inst.Stop();
 
         while (holdFiles.size())
         {
@@ -152,10 +148,6 @@ Php::Value VoIP::discard(Php::Parameters &params)
         return false;
     }
     Php::Value self(this);
-    /*if (!self["configuration"]["auth_key"])
-    {
-        return false;
-    }*/
     if (self["madeline"] && self["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto"))
     {
         Php::Array reason;
@@ -180,7 +172,11 @@ Php::Value VoIP::discard(Php::Parameters &params)
         else
             debug = true;
 
-        self["madeline"].value().call("discardCall", self["internalStorage"]["callID"].value(), reason, rating, debug);
+        if (self["internalStorage"]["callID"].value()) {
+            Php::Value res = self["madeline"].value().call("discardCallFrom", self, self["internalStorage"]["callID"].value(), reason, rating, debug);
+            deinitVoIPController();
+            return res;
+        }
     }
     deinitVoIPController();
     return this;
@@ -192,25 +188,12 @@ Php::Value VoIP::accept()
         return false;
     callState = CALL_STATE_ACCEPTED;
     Php::Value self(this);
-    if (self["madeline"].value().call("acceptCall", self["internalStorage"]["callID"].value()) == false)
-    {
-        if (!self["configuration"])
-        {
-            return false;
-        }
-        if (self["madeline"].value().instanceOf("danog\\MadelineProto\\MTProto"))
-        {
-            Php::Array reason;
-            Php::Array rating;
-            Php::Value debug;
-            reason["_"] = "phoneCallDiscardReasonDisconnect";
-            debug = false;
-            self["madeline"].value().call("discardCall", self["internalStorage"]["callID"].value(), reason, rating, debug);
-        }
-        deinitVoIPController();
-        return false;
-    }
-    return this;
+
+    Php::Array method;
+    method[0] = self["madeline"].value();
+    method[1] = "acceptCallFrom";
+    
+    return Php::call("call_user_func", method, self, self["internalStorage"].value()["callID"].value());
 }
 
 Php::Value VoIP::close()
@@ -246,13 +229,13 @@ Php::Value VoIP::startTheMagic()
             Php::Value debug;
             reason["_"] = "phoneCallDiscardReasonDisconnect";
             debug = false;
-            self["madeline"].value().call("discardCall", self["internalStorage"]["callID"].value(), reason, rating, debug);
+            self["madeline"].value().call("discardCallFrom", self, self["internalStorage"].value()["callID"].value(), reason, rating, debug);
         }
         deinitVoIPController();
         return false;
     }
-    inst->Start();
-    inst->Connect();
+    inst.Start();
+    inst.Connect();
     Php::Value self(this);
     self["internalStorage"]["created"] = (int64_t)time(NULL);
     callState = CALL_STATE_READY;
@@ -263,9 +246,9 @@ Php::Value VoIP::whenCreated()
 {
 
     Php::Value self(this);
-    if (self["internalStorage"]["created"])
+    if (self["internalStorage"].value()["created"])
     {
-        return self["internalStorage"]["created"];
+        return self["internalStorage"].value()["created"];
     }
     return false;
 }
@@ -273,7 +256,7 @@ Php::Value VoIP::isCreator()
 {
 
     Php::Value self(this);
-    return self["internalStorage"]["creator"];
+    return self["internalStorage"].value()["creator"];
 }
 Php::Value VoIP::getOtherID()
 {
@@ -287,12 +270,12 @@ Php::Value VoIP::setMadeline(Php::Parameters &params)
 Php::Value VoIP::getProtocol()
 {
     Php::Value self(this);
-    return self["internalStorage"]["protocol"];
+    return self["internalStorage"].value()["protocol"];
 }
 Php::Value VoIP::getCallID()
 {
     Php::Value self(this);
-    return self["internalStorage"]["callID"];
+    return self["internalStorage"].value()["callID"].value();
 }
 
 Php::Value VoIP::getCallState()
@@ -303,16 +286,21 @@ Php::Value VoIP::getCallState()
 Php::Value VoIP::getVisualization()
 {
     Php::Value self(this);
-    if (self["internalStorage"]["visualization"])
+    Php::Value internalStorage = self["internalStorage"].value();
+    Php::call("var_dump", internalStorage["visualization"]);
+    if (internalStorage["visualization"])
     {
-        return self["internalStorage"]["visualization"];
+        return internalStorage["visualization"].value();
     }
     return false;
 }
 void VoIP::setVisualization(Php::Parameters &params)
 {
     Php::Value self(this);
-    self["internalStorage"]["visualization"] = params[0];
+    Php::Value internalStorage = self["internalStorage"].value();
+    internalStorage["visualization"] = params[0];
+    self["internalStorage"] = internalStorage;
+    Php::call("var_dump", internalStorage);
 }
 
 void VoIP::parseConfig()
@@ -321,41 +309,45 @@ void VoIP::parseConfig()
     if (!self["configuration"]["auth_key"])
         return;
 
+    Php::Value config = self["configuration"].value();
+    Php::Value internalStorage = self["internalStorage"].value();
+    
     VoIPController::Config cfg;
-    cfg.recvTimeout = (double)self["configuration"]["recv_timeout"];
-    cfg.initTimeout = (double)self["configuration"]["init_timeout"];
-    cfg.dataSaving = (int)self["configuration"]["data_saving"];
-    cfg.enableAEC = (bool)self["configuration"]["enable_AEC"];
-    cfg.enableNS = (bool)self["configuration"]["enable_NS"];
-    cfg.enableAGC = (bool)self["configuration"]["enable_AGC"];
-    cfg.enableCallUpgrade = (bool)self["configuration"]["enable_call_upgrade"];
+    cfg.recvTimeout = (double)config["recv_timeout"];
+    cfg.initTimeout = (double)config["init_timeout"];
+    cfg.dataSaving = (int)config["data_saving"];
+    cfg.enableAEC = (bool)config["enable_AEC"];
+    cfg.enableNS = (bool)config["enable_NS"];
+    cfg.enableAGC = (bool)config["enable_AGC"];
+    cfg.enableCallUpgrade = (bool)config["enable_call_upgrade"];
 
-    if (self["configuration"]["log_file_path"])
+    if (config["log_file_path"])
     {
-        std::string logFilePath = self["configuration"]["log_file_path"];
+        std::string logFilePath = config["log_file_path"];
         cfg.logFilePath = logFilePath;
     }
 
-    if (self["configuration"]["stats_dump_file_path"])
+    if (config["stats_dump_file_path"])
     {
-        std::string statsDumpFilePath = self["configuration"]["stats_dump_file_path"];
+        std::string statsDumpFilePath = config["stats_dump_file_path"];
         cfg.statsDumpFilePath = statsDumpFilePath;
     }
 
-    if (self["configuration"]["shared_config"])
+    if (config["shared_config"])
     {
-        Php::Value shared_config = self["configuration"]["shared_config"];
+        Php::Value shared_config = config["shared_config"];
         ServerConfig::GetSharedInstance()->Update(Php::call("json_encode", Php::call("array_merge", Php::call("\\danog\\MadelineProto\\VoIPServerConfig::getFinal"), shared_config)));
     }
-    inst->SetConfig(cfg);
+    inst.SetConfig(cfg);
 
-    char *key = (char *)malloc(256);
-    memcpy(key, self["configuration"]["auth_key"], 256);
-    inst->SetEncryptionKey(key, (bool)self["internalStorage"]["creator"]);
-    free(key);
+    /*char *key = (char *)malloc(256);
+    memcpy(key, config["auth_key"], 256);*/
+    std::string strKey = config["auth_key"];
+    std::vector<uint8_t> key(strKey.begin(), strKey.end());
+    inst.SetEncryptionKey(key, (bool)internalStorage["creator"]);
 
     vector<Endpoint> eps;
-    Php::Value endpoints = self["configuration"]["endpoints"];
+    Php::Value endpoints = config["endpoints"];
     for (int i = 0; i < endpoints.size(); i++)
     {
         string ip = endpoints[i]["ip"];
@@ -379,11 +371,11 @@ void VoIP::parseConfig()
         free(pTag);
     }
 
-    inst->SetRemoteEndpoints(eps, (bool)self["internalStorage"]["protocol"]["udp_p2p"], (int)self["internalStorage"]["protocol"]["max_layer"]);
-    inst->SetNetworkType(self["configuration"]["network_type"]);
-    if (self["configuration"]["proxy"])
+    inst.SetRemoteEndpoints(eps, (bool)internalStorage["protocol"]["udp_p2p"], (int)internalStorage["protocol"]["max_layer"]);
+    inst.SetNetworkType(config["network_type"]);
+    if (config["proxy"])
     {
-        inst->SetProxy(self["configuration"]["proxy"]["protocol"], self["configuration"]["proxy"]["address"], (int32_t)self["configuration"]["proxy"]["port"], self["configuration"]["proxy"]["username"], self["configuration"]["proxy"]["password"]);
+        inst.SetProxy(config["proxy"]["protocol"], config["proxy"]["address"], (int32_t)config["proxy"]["port"], config["proxy"]["username"], config["proxy"]["password"]);
     }
 }
 
@@ -460,25 +452,14 @@ Php::Value VoIP::playOnHold(Php::Parameters &params)
 
 Php::Value VoIP::setMicMute(Php::Parameters &params)
 {
-    inst->SetMicMute((bool)params[0]);
-    return this;
-}
-
-Php::Value VoIP::debugCtl(Php::Parameters &params)
-{
-    inst->DebugCtl((int)params[0], (int)params[1]);
-    return this;
-}
-Php::Value VoIP::setBitrate(Php::Parameters &params)
-{
-    inst->DebugCtl(1, (int)params[0]);
+    inst.SetMicMute((bool)params[0]);
     return this;
 }
 
 Php::Value VoIP::getDebugLog()
 {
     Php::Value data;
-    string encoded = inst->GetDebugLog();
+    string encoded = inst.GetDebugLog();
     if (!encoded.empty())
     {
         data = Php::call("json_decode", encoded, true);
@@ -493,27 +474,27 @@ Php::Value VoIP::getVersion()
 
 Php::Value VoIP::getSignalBarsCount()
 {
-    return inst->GetSignalBarsCount();
+    return inst.GetSignalBarsCount();
 }
 
 Php::Value VoIP::getPreferredRelayID()
 {
-    return inst->GetPreferredRelayID();
+    return inst.GetPreferredRelayID();
 }
 
 Php::Value VoIP::getLastError()
 {
-    return inst->GetLastError();
+    return inst.GetLastError();
 }
 Php::Value VoIP::getDebugString()
 {
-    return inst->GetDebugString();
+    return inst.GetDebugString();
 }
 Php::Value VoIP::getStats()
 {
     Php::Value stats;
     VoIPController::TrafficStats _stats;
-    inst->GetStats(&_stats);
+    inst.GetStats(&_stats);
     stats["bytesSentWifi"] = (int64_t)_stats.bytesSentWifi;
     stats["bytesSentMobile"] = (int64_t)_stats.bytesSentMobile;
     stats["bytesRecvdWifi"] = (int64_t)_stats.bytesRecvdWifi;
@@ -523,7 +504,7 @@ Php::Value VoIP::getStats()
 
 Php::Value VoIP::getPeerCapabilities()
 {
-    return (int64_t)inst->GetPeerCapabilities();
+    return (int64_t)inst.GetPeerCapabilities();
 }
 Php::Value VoIP::getConnectionMaxLayer()
 {
@@ -531,14 +512,14 @@ Php::Value VoIP::getConnectionMaxLayer()
 }
 void VoIP::requestCallUpgrade()
 {
-    return inst->RequestCallUpgrade();
+    return inst.RequestCallUpgrade();
 }
 
 void VoIP::sendGroupCallKey(Php::Parameters &params)
 {
     unsigned char *key = (unsigned char *)malloc(256);
     memcpy(key, params[0], 256);
-    inst->SendGroupCallKey(key);
+    inst.SendGroupCallKey(key);
 }
 
 Php::Value VoIP::getState()
@@ -570,7 +551,7 @@ extern "C"
     {
         // static(!) Php::Extension object that should stay in memory
         // for the entire duration of the process (that's why it's static)
-        static Php::Extension extension("php-libtgvoip", "1.1.2");
+        static Php::Extension extension("php-libtgvoip", "1.5.0");
 
         Php::Class<VoIPServerConfigInternal> voipServerConfigInternal("VoIPServerConfigInternal");
         voipServerConfigInternal.method<&VoIPServerConfigInternal::update>("updateInternal", Php::Protected | Php::Static, {Php::ByVal("config", Php::Type::Array)});
@@ -601,10 +582,6 @@ extern "C"
         voip.method<&VoIP::setMicMute>("setMicMute", Php::Public | Php::Final, {
                                                                                    Php::ByVal("type", Php::Type::Bool),
                                                                                });
-        voip.method<&VoIP::debugCtl>("debugCtl", Php::Public | Php::Final, {
-                                                                               Php::ByVal("request", Php::Type::Numeric),
-                                                                               Php::ByVal("param", Php::Type::Numeric),
-                                                                           });
         voip.method<&VoIP::parseConfig>("parseConfig", Php::Public | Php::Final);
         voip.method<&VoIP::getDebugLog>("getDebugLog", Php::Public | Php::Final);
         voip.method<&VoIP::getLastError>("getLastError", Php::Public | Php::Final);
@@ -625,8 +602,6 @@ extern "C"
 
         voip.method<&VoIP::setOutputFile>("setOutputFile", Php::Public | Php::Final, {Php::ByVal("file", Php::Type::String)});
         voip.method<&VoIP::unsetOutputFile>("unsetOutputFile", Php::Public | Php::Final);
-
-        voip.method<&VoIP::setBitrate>("setBitrate", Php::Public | Php::Final, {Php::ByVal("bitrate", Php::Type::Numeric)});
 
         voip.property("configuration", 0, Php::Public);
         voip.property("storage", 0, Php::Public);
@@ -680,7 +655,7 @@ extern "C"
 
         voip.constant("TGVOIP_PEER_CAP_GROUP_CALLS", TGVOIP_PEER_CAP_GROUP_CALLS);
 
-        voip.constant("PHP_LIBTGVOIP_VERSION", "1.4.0");
+        voip.constant("PHP_LIBTGVOIP_VERSION", "1.5.0");
 
         Php::Namespace danog("danog");
         Php::Namespace MadelineProto("MadelineProto");
