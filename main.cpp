@@ -60,9 +60,11 @@ void VoIP::setCall(Php::Parameters &params)
 }
 void VoIP::initVoIPController()
 {
+    inst = std::make_unique<VoIPController>();
+
     outputFile = NULL;
 
-    inst.implData = (void *)this;
+    inst->implData = (void *)this;
     VoIPController::Callbacks callbacks;
     callbacks.connectionStateChanged = [](VoIPController *controller, int state) {
         ((VoIP *)controller->implData)->state = state;
@@ -75,8 +77,8 @@ void VoIP::initVoIPController()
     callbacks.groupCallKeySent = NULL;
     callbacks.groupCallKeyReceived = NULL;
     callbacks.upgradeToGroupCallRequested = NULL;
-    inst.SetCallbacks(callbacks);
-    inst.SetAudioDataCallbacks([this](int16_t *buffer, size_t size) { this->sendAudioFrame(buffer, size); }, [this](int16_t *buffer, size_t size) { this->recvAudioFrame(buffer, size); }, [](int16_t *, size_t) {});
+    inst->SetCallbacks(callbacks);
+    inst->SetAudioDataCallbacks([this](int16_t *buffer, size_t size) { this->sendAudioFrame(buffer, size); }, [this](int16_t *buffer, size_t size) { this->recvAudioFrame(buffer, size); }, [](int16_t *, size_t) {});
 }
 
 void VoIP::deinitVoIPController()
@@ -84,7 +86,7 @@ void VoIP::deinitVoIPController()
     if (callState != CALL_STATE_ENDED)
     {
         callState = CALL_STATE_ENDED;
-        inst.Stop();
+        inst->Stop();
 
         while (holdFiles.size())
         {
@@ -234,8 +236,8 @@ Php::Value VoIP::startTheMagic()
         deinitVoIPController();
         return false;
     }
-    inst.Start();
-    inst.Connect();
+    inst->Start();
+    inst->Connect();
     Php::Value self(this);
     self["internalStorage"]["created"] = (int64_t)time(NULL);
     callState = CALL_STATE_READY;
@@ -336,13 +338,13 @@ void VoIP::parseConfig()
         Php::Value shared_config = config["shared_config"];
         ServerConfig::GetSharedInstance()->Update(Php::call("json_encode", Php::call("array_merge", Php::call("\\danog\\MadelineProto\\VoIPServerConfig::getFinal"), shared_config)));
     }
-    inst.SetConfig(cfg);
+    inst->SetConfig(cfg);
 
     /*char *key = (char *)malloc(256);
     memcpy(key, config["auth_key"], 256);*/
     std::string strKey = config["auth_key"];
     std::vector<uint8_t> key(strKey.begin(), strKey.end());
-    inst.SetEncryptionKey(key, (bool)internalStorage["creator"]);
+    inst->SetEncryptionKey(key, (bool)internalStorage["creator"]);
 
     vector<Endpoint> eps;
     Php::Value endpoints = config["endpoints"];
@@ -369,11 +371,11 @@ void VoIP::parseConfig()
         free(pTag);
     }
 
-    inst.SetRemoteEndpoints(eps, (bool)internalStorage["protocol"]["udp_p2p"], (int)internalStorage["protocol"]["max_layer"]);
-    inst.SetNetworkType(config["network_type"]);
+    inst->SetRemoteEndpoints(eps, (bool)internalStorage["protocol"]["udp_p2p"], (int)internalStorage["protocol"]["max_layer"]);
+    inst->SetNetworkType(config["network_type"]);
     if (config["proxy"])
     {
-        inst.SetProxy(config["proxy"]["protocol"], config["proxy"]["address"], (int32_t)config["proxy"]["port"], config["proxy"]["username"], config["proxy"]["password"]);
+        inst->SetProxy(config["proxy"]["protocol"], config["proxy"]["address"], (int32_t)config["proxy"]["port"], config["proxy"]["username"], config["proxy"]["password"]);
     }
 }
 
@@ -450,14 +452,14 @@ Php::Value VoIP::playOnHold(Php::Parameters &params)
 
 Php::Value VoIP::setMicMute(Php::Parameters &params)
 {
-    inst.SetMicMute((bool)params[0]);
+    inst->SetMicMute((bool)params[0]);
     return this;
 }
 
 Php::Value VoIP::getDebugLog()
 {
     Php::Value data;
-    string encoded = inst.GetDebugLog();
+    string encoded = inst->GetDebugLog();
     if (!encoded.empty())
     {
         data = Php::call("json_decode", encoded, true);
@@ -472,27 +474,27 @@ Php::Value VoIP::getVersion()
 
 Php::Value VoIP::getSignalBarsCount()
 {
-    return inst.GetSignalBarsCount();
+    return inst->GetSignalBarsCount();
 }
 
 Php::Value VoIP::getPreferredRelayID()
 {
-    return inst.GetPreferredRelayID();
+    return inst->GetPreferredRelayID();
 }
 
 Php::Value VoIP::getLastError()
 {
-    return inst.GetLastError();
+    return inst->GetLastError();
 }
 Php::Value VoIP::getDebugString()
 {
-    return inst.GetDebugString();
+    return inst->GetDebugString();
 }
 Php::Value VoIP::getStats()
 {
     Php::Value stats;
     VoIPController::TrafficStats _stats;
-    inst.GetStats(&_stats);
+    inst->GetStats(&_stats);
     stats["bytesSentWifi"] = (int64_t)_stats.bytesSentWifi;
     stats["bytesSentMobile"] = (int64_t)_stats.bytesSentMobile;
     stats["bytesRecvdWifi"] = (int64_t)_stats.bytesRecvdWifi;
@@ -502,7 +504,7 @@ Php::Value VoIP::getStats()
 
 Php::Value VoIP::getPeerCapabilities()
 {
-    return (int64_t)inst.GetPeerCapabilities();
+    return (int64_t)inst->GetPeerCapabilities();
 }
 Php::Value VoIP::getConnectionMaxLayer()
 {
@@ -510,14 +512,14 @@ Php::Value VoIP::getConnectionMaxLayer()
 }
 void VoIP::requestCallUpgrade()
 {
-    return inst.RequestCallUpgrade();
+    return inst->RequestCallUpgrade();
 }
 
 void VoIP::sendGroupCallKey(Php::Parameters &params)
 {
     unsigned char *key = (unsigned char *)malloc(256);
     memcpy(key, params[0], 256);
-    inst.SendGroupCallKey(key);
+    inst->SendGroupCallKey(key);
 }
 
 Php::Value VoIP::getState()

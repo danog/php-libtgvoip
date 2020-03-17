@@ -154,7 +154,7 @@ private:
     size_t readOutput;
     int callState = CALL_STATE_NONE;
     
-    VoIPController inst;
+    std::unique_ptr<VoIPController> inst;
 };
 
 #endif
