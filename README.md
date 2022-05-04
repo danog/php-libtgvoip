@@ -6,6 +6,8 @@ Licensed under AGPLV3, created by Daniil Gentili.
 
 This is a PHP extension that wraps the [telegram VoIP library](https://github.com/grishka/libtgvoip), created using php-cpp.
 
+Note: this is a legacy project based on the old libtgvoip library and supports only PHP 7.4, it will be eventually rewritten to make use of the new tgcalls library and PHP 8.0+ with FFI.
+
 ## Installation
 
 Install the libopus headers (libopus-dev), openssl headers and the php-cpp headers.
@@ -15,7 +17,7 @@ On Ubuntu/debian/any debian-based distro:
 
 
 ```
-sudo apt-get install libopus-dev libssl-dev build-essential php$(echo "<?php echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;" | php)-dev && git clone https://github.com/danog/PHP-CPP && cd PHP-CPP && make -j$(nproc) && sudo make install && cd .. && git clone --recursive https://github.com/danog/php-libtgvoip && cd php-libtgvoip && make && sudo make install
+sudo apt-get install libopus-dev libssl-dev build-essential php7.4-dev php7.4 && git clone https://github.com/copernicamarketingsoftware/PHP-CPP && cd PHP-CPP && make -j$(nproc) && sudo make install && cd .. && git clone --recursive https://github.com/danog/php-libtgvoip && cd php-libtgvoip && make && sudo make install
 ```
 
 ## Documentation
