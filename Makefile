@@ -37,7 +37,7 @@ NAME				=	libtgvoip
 #	one for each extension. Use this variable to specify this directory.
 #
 
-INI_DIR				=	$(shell php --ini | sed '/Scan for additional .ini files in: /!d;s/Scan for additional .ini files in: //')
+INI_DIR				=	$(shell php7.4 --ini | sed '/Scan for additional .ini files in: /!d;s/Scan for additional .ini files in: //')
 
 
 #
@@ -49,7 +49,7 @@ INI_DIR				=	$(shell php --ini | sed '/Scan for additional .ini files in: /!d;s/
 #	this with a different fixed directory
 #
 
-EXTENSION_DIR		=	$(shell php-config --extension-dir)
+EXTENSION_DIR		=	$(shell php-config7.4 --extension-dir)
 
 
 #
